@@ -5,6 +5,10 @@
 
     <include name="${HXCPP}/build-tool/BuildCommon.xml"/>
 
+    <!-- Paths can be supplied with -DOPENCV_INCLUDE_DIR=... and -DOPENCV_LIB_DIR=... -->
+    <set name="OPENCV_INCLUDE_DIR" value="/usr/local/include" unless="OPENCV_INCLUDE_DIR"/>
+    <set name="OPENCV_LIB_DIR" value="/usr/local/lib" unless="OPENCV_LIB_DIR"/>
+
     <!-- Determine the output location for the NDLL -->
 
     <set name="LIB_DIR" value="-L" unless="windows"/>
@@ -18,7 +22,8 @@
 
     <files id="common">
         <compilerflag value="-Iinclude"/>
-        <compilerflag value="-I/usr/local/include/opencv2"/>
+        <compilerflag value="-I${OPENCV_INCLUDE_DIR}"/>
+        <compilerflag value="-I${OPENCV_INCLUDE_DIR}/opencv2"/>
 
         <file name="src/main.cpp"/>
         <file name="src/highgui.cpp"/>
@@ -41,11 +46,10 @@
 
         <flag value="${LIB_DIR}${LIB_SUFFIX}"/>
 
-        <!------------------------------------------------------>
+        
         <!-- Static libraries for OpenCV and its dependencies -->
-        <!------------------------------------------------------>
 
-        <flag value="-L/usr/local/lib"/>
+        <flag value="${LIB_DIR}${OPENCV_LIB_DIR}"/>
 
         <lib name="-lopencv_core"/>
         <lib name="-lopencv_imgproc"/>
