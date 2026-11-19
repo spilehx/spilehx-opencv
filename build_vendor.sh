@@ -45,9 +45,17 @@ validateOpenCVBuild(){
 
 buildOpenCVNdll(){
     ECHO_INFO "Building OpenCV NDLL..."
+
+    createTempDir
+
+    validateDir $PATH_TO_VENDOR_NDLL_DIR
     haxelib run hxcpp Build.xml -DHXCPP_M64 \
         -DOPENCV_INCLUDE_DIR="$PATH_TO_OPEN_CV_INSTALL_DIR/include" \
-        -DOPENCV_LIB_DIR="$PATH_TO_OPEN_CV_INSTALL_DIR/lib"
+        -DOPENCV_LIB_DIR="$PATH_TO_OPEN_CV_INSTALL_DIR/lib" \
+        -DPATH_TO_VENDOR_NDLL_DIR="$PATH_TO_VENDOR_NDLL_DIR"
+
+
+    removeTempDir
 
 }
 
