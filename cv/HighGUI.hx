@@ -5,7 +5,11 @@ import cv.core.Image;
 import cv.core.Mat;
 import cv.highgui.*;
 
-import #if cpp cpp #else neko #end.Lib;
+#if cpp
+import cv.NativeLibrary as Lib;
+#else
+import neko.Lib;
+#end
 
 import cv.Macros;
 

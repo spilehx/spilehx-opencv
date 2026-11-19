@@ -1,12 +1,11 @@
 {
-    "name":         "opencv",
-    "url":          "https://github.com/deltaluca/hx-opencv",
+    "name":         "spilehx-opencv",
     "license":      "MIT",
     "tags":         ["cpp","neko"],
     "description":  "Bindings to OpenCV 2.4.5 (using QT 4.8.2 and OpenGL)",
     "version":      "0.0.4",
-    "releasenote":  "tralala",
-    "contributors": ["deltaluca"],
+    "releasenote":  "test",
+    "contributors": ["spilehx"],
     "dependencies": {
         "hxcpp": ""
     }

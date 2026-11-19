@@ -1,6 +1,10 @@
 package cv;
 
-import #if cpp cpp #else neko #end.Lib;
+#if cpp
+import cv.NativeLibrary as Lib;
+#else
+import neko.Lib;
+#end
 import cv.core.*;
 import cv.Core;
 import cv.features2d.*;
