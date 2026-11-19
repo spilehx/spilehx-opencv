@@ -23,7 +23,6 @@
     <lib name="${this_dir}/libopencv_video.a" />
     <lib name="${this_dir}/libopencv_videostab.a" />
     <lib name="-Wl,--end-group" />
-    <lib name="-lextra_component-NOTFOUND" />
     <lib name="-ltiff" />
     <lib name="-lpng" />
     <lib name="-ljpeg" />
@@ -34,5 +33,10 @@
     <lib name="-lm" />
     <lib name="-ldl" />
     <lib name="-lstdc++" />
+    <lib name="-lQt5Widgets" />
+    <lib name="-lQt5Gui" />
+    <lib name="-lQt5Test" />
+    <lib name="-lQt5Concurrent" />
+    <lib name="-lQt5Core" />
   </target>
 </xml>

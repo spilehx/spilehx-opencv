@@ -4,6 +4,7 @@ Detailed project guidance is under `.ai/`. Do not automatically load every docum
 
 - Code/style: `.ai/CODE_STYLE.md`
 - Working practices: `.ai/WAYS_OF_WORKING.md`
+- Project structure: `.ai/ARCHITECTURE.md`
 
 Implementation is the source of truth if it differs from this guidance.
 

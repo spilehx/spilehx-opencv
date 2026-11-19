@@ -75,6 +75,15 @@ for archive in install.rglob("*.a"):
 flags = shlex.split(subprocess.check_output(
     ["pkg-config", "--static", "--libs", str(install / "lib/pkgconfig/opencv.pc")],
     text=True))
+# OpenCV 2.4 reads IMPORTED_LOCATION for Qt5 targets, which expose their
+# locations per configuration instead. Its .pc file loses these Qt dependencies.
+if "-lextra_component-NOTFOUND" in flags:
+    flags.remove("-lextra_component-NOTFOUND")
+    flags.extend(shlex.split(subprocess.check_output(
+        ["pkg-config", "--libs", "Qt5Widgets", "Qt5Test", "Qt5Concurrent"],
+        text=True)))
+if any("NOTFOUND" in flag for flag in flags):
+    raise SystemExit("Unresolved dependency in OpenCV pkg-config metadata")
 root = ET.Element("xml")
 target = ET.SubElement(root, "target", id="haxe")
 def link(value):
