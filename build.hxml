@@ -1,0 +1,4 @@
+-cp .
+-cp samples
+-main Sample1
+-neko bin/Sample1.n
