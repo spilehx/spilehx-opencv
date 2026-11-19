@@ -2,6 +2,7 @@ bin/
 build/
 /vendor/*
 !/vendor/.gitkeep
+!/vendor/toolchain
 
 obj/
 ndll/

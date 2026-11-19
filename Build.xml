@@ -5,6 +5,11 @@
 
     <include name="${HXCPP}/build-tool/BuildCommon.xml"/>
 
+    <section if="PATH_TO_TEMP_DIR">
+        <set name="OPENCV_BASE_TOOLCHAIN" value="${toolchain}"/>
+        <set name="toolchain" value="opencv"/>
+    </section>
+
     <!-- Paths can be supplied with -DOPENCV_INCLUDE_DIR=... and -DOPENCV_LIB_DIR=... -->
     <set name="OPENCV_INCLUDE_DIR" value="/usr/local/include" unless="OPENCV_INCLUDE_DIR"/>
     <set name="OPENCV_LIB_DIR" value="/usr/local/lib" unless="OPENCV_LIB_DIR"/>

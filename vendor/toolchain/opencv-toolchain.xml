@@ -1,0 +1,7 @@
+<xml>
+    <include name="${HXCPP}/toolchain/${OPENCV_BASE_TOOLCHAIN}-toolchain.xml"/>
+
+    <compiler>
+        <objdir value="${PATH_TO_TEMP_DIR}/obj/${OPENCV_BASE_TOOLCHAIN}${OBJEXT}/"/>
+    </compiler>
+</xml>
