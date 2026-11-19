@@ -21,7 +21,7 @@ validateBuildEnvironment(){
         exit 1
     fi
     local tool
-    for tool in python3 patchelf; do
+    for tool in python3 pkg-config; do
         if ! command -v "$tool" >/dev/null 2>&1; then
             echo "$tool is required to build and package the haxelib." >&2
             exit 1
@@ -53,16 +53,55 @@ removeTempDir(){
 
 prepareNativeRuntime(){
     local runtime_dir="$PATH_TO_TEMP_DIR/native/Linux64"
-    local library
     mkdir -p "$runtime_dir"
-    # Store real files under every SONAME, independent of ZIP symlink support.
-    cp -L "$PATH_TO_VENDOR_NDLL_DIR/Linux64/opencv.ndll" \
-        "$PATH_TO_OPEN_CV_INSTALL_DIR/lib/"libopencv_*.so* "$runtime_dir/"
+    cp "$PATH_TO_VENDOR_NDLL_DIR/Linux64/opencv.a" "$runtime_dir/"
     cp "$PATH_TO_OPEN_CV_SOURCE_DIR/LICENSE" "$runtime_dir/OpenCV-LICENSE.txt"
-    for library in "$runtime_dir/opencv.ndll" "$runtime_dir/"*.so*; do
-        # Each library resolves its dependencies beside itself after relocation.
-        patchelf --set-rpath '$ORIGIN' "$library"
-    done
+    python3 - "$PATH_TO_OPEN_CV_INSTALL_DIR" "$runtime_dir" <<'PYTHON'
+from pathlib import Path
+import shlex
+import shutil
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+
+install, runtime = map(Path, sys.argv[1:])
+archives = {}
+for archive in install.rglob("*.a"):
+    if archive.name in archives:
+        raise SystemExit(f"Duplicate static archive: {archive.name}")
+    archives[archive.name] = archive
+    shutil.copy2(archive, runtime / archive.name)
+
+flags = shlex.split(subprocess.check_output(
+    ["pkg-config", "--static", "--libs", str(install / "lib/pkgconfig/opencv.pc")],
+    text=True))
+root = ET.Element("xml")
+target = ET.SubElement(root, "target", id="haxe")
+def link(value):
+    ET.SubElement(target, "lib", name=value)
+
+# Keep all CFFI registration objects, including primitives called only by name.
+link("-Wl,--whole-archive")
+link("${this_dir}/opencv.a")
+link("-Wl,--no-whole-archive")
+link("-Wl,--start-group")
+for archive in sorted(archives):
+    link("${this_dir}/" + archive)
+link("-Wl,--end-group")
+for flag in flags:
+    if flag.startswith("-L"):
+        # OpenCV's private build paths must not escape into the package.
+        continue
+    if flag.startswith("-l") and "lib" + flag[2:] + ".a" in archives:
+        continue
+    if flag.startswith("-lopencv_"):
+        raise SystemExit(f"Missing static OpenCV library: {flag}")
+    if str(install) in flag:
+        raise SystemExit(f"Unresolved build path in linker flags: {flag}")
+    link(flag)
+ET.indent(root)
+ET.ElementTree(root).write(runtime / "Build.xml", encoding="unicode")
+PYTHON
 }
 
 updateDevelopmentRuntime(){

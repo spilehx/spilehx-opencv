@@ -5,7 +5,7 @@
     "description":  "Haxe bindings to OpenCV 2.4.13.7 for Linux x86_64 C++ applications",
     "url":          "https://github.com/spilehx/spilehx-opencv",
     "version":      "0.0.4",
-    "releasenote":  "Linux x86_64 native runtime with automatic deployment for C++ applications.",
+    "releasenote":  "Statically linked OpenCV for Linux x86_64 C++ applications; no native runtime folder required.",
     "contributors": ["spilehx"],
     "dependencies": {
         "hxcpp": ""

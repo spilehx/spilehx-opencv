@@ -1,16 +1,16 @@
 # spilehx-opencv
 
-Haxe bindings for OpenCV 2.4.13.7, with a native runtime for Linux x86_64.
+Haxe bindings for OpenCV 2.4.13.7, with statically linked OpenCV for Linux x86_64.
 
 ## Requirements
 
 - Haxe 4.x and hxcpp.
 - A C++ compiler.
 - A Linux x86_64 system compatible with the supplied native binaries, including
-  their system dependencies such as Qt and GTK.
+  system dependencies such as Qt and GTK.
 
-Only the C++ target is supported. A prebuilt runtime does not require users to
-build OpenCV, but it still requires compatible system libraries. Supported Linux
+Only the C++ target is supported. Prebuilt static libraries let users build their
+applications without building OpenCV, but compatible system libraries are still required. Supported Linux
 distributions and exact system package requirements have not yet been validated.
 
 ## Install the library
@@ -21,8 +21,8 @@ haxelib git spilehx-opencv https://github.com/spilehx/spilehx-opencv
 ```
 
 Git installation requires the maintainer to commit the prepared `native/Linux64/`
-runtime described below. Haxelib does not run `package-haxelib.sh` during Git
-installation. An installation without that runtime will fail when compiling.
+static libraries described below. Haxelib does not run `package-haxelib.sh` during Git
+installation. An installation without those libraries will fail when compiling.
 
 Once a release has been submitted to the Haxelib registry, users can instead run
 `haxelib install spilehx-opencv`. A packaged ZIP can also be installed directly
@@ -49,31 +49,34 @@ haxe build.hxml
 ./bin/Main
 ```
 
-Using `-lib spilehx-opencv` automatically selects the 64-bit build and copies the
-bundled runtime into `bin/native`. The bindings find it relative to the executable;
-no deployment command, launcher or `LD_LIBRARY_PATH` setup is required.
+Using `-lib spilehx-opencv` automatically selects the 64-bit build and links the
+bundled OpenCV archives and CFFI wrapper into your executable. There is no
+`bin/native` directory to distribute, and the executable can be moved on its own.
+Existing `native` folders from earlier builds are no longer used and can be removed.
 
-Keep the `native` directory beside the executable when distributing or moving
-your application. The target machine needs compatible system libraries, but does
-not need Haxe or the original library checkout. Application assets still resolve
-relative to the working directory unless your application handles them differently.
+The executable is larger and still needs compatible system libraries, including
+Qt/GTK; it does not need Haxe, an OpenCV installation, or the library checkout at
+runtime. Application assets still resolve relative to the working directory unless
+your application handles them differently. Include the applicable licenses when
+distributing your application, including `native/Linux64/OpenCV-LICENSE.txt` from
+the haxelib package.
 
 ## Build and package the haxelib
 
 For library development and releases, install the native build prerequisites
 (including CMake, the C++ compiler, Qt/GTK development dependencies, `wget` and
-`bsdtar`), plus Python 3 and `patchelf`. Configure paths in `.env`, then run from
+`bsdtar`), plus Python 3 and `pkg-config`. Configure paths in `.env`, then run from
 the library directory:
 
 ```sh
 bash package-haxelib.sh
 ```
 
-This builds OpenCV and the wrapper, prepares relocatable native libraries, and
+This builds static OpenCV libraries and the wrapper, generates linker metadata, and
 creates `dist/spilehx-opencv-VERSION-linux64.zip` for publication. The package
 contains `cv/`, `haxelib.json`, `extraParams.hxml`, `README.md`, `LICENSE`, and
-`native/Linux64/` with `opencv.ndll`, OpenCV shared libraries and the OpenCV
-license. It does not install or publish anything.
+`native/Linux64/` with `opencv.a`, OpenCV and bundled dependency archives, a
+linker `Build.xml`, and the OpenCV license. It does not install or publish anything.
 
 The same command prepares `native/Linux64` in this checkout. For local development,
 register the checkout once with:
@@ -82,6 +85,8 @@ register the checkout once with:
 haxelib dev spilehx-opencv /absolute/path/to/hx-opencv
 ```
 
+The first package build after switching from shared libraries rebuilds OpenCV as
+static archives. Existing consumers need a clean rebuild to replace the old loader.
 Then use the same application build commands above. Re-run the packaging command
 when changing the native bindings. Prebuilt releases must be validated on the Linux
 distributions they support; Linux x86_64 alone does not guarantee compatibility.
@@ -106,10 +111,10 @@ the generated ZIP. For the current version:
 haxelib submit dist/spilehx-opencv-0.0.4-linux64.zip
 ```
 
-Publishing to GitHub and submitting to Haxelib are separate steps. Keep the native
-runtime and Haxe bindings from the same release together.
+Publishing to GitHub and submitting to Haxelib are separate steps. Keep the static
+libraries and Haxe bindings from the same release together.
 
 ## License
 
 The bindings are distributed under the MIT license in `LICENSE`. The bundled
-OpenCV runtime includes its own license in `native/Linux64/OpenCV-LICENSE.txt`.
+OpenCV libraries include their license in `native/Linux64/OpenCV-LICENSE.txt`.

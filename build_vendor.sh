@@ -40,11 +40,11 @@ validateOpenCVBuild(){
     ECHO_INFO "Validating OpenCV build..."
     validateOpenCVSource
     startOpenCVBuild
-    buildOpenCVNdll
+    buildOpenCVWrapper
 }
 
-buildOpenCVNdll(){
-    ECHO_INFO "Building OpenCV NDLL..."
+buildOpenCVWrapper(){
+    ECHO_INFO "Building static OpenCV wrapper..."
 
     createTempDir
 
@@ -73,7 +73,7 @@ startOpenCVBuild(){
     fi
 
 
-    if [ "$(doesDirExists $PATH_TO_OPEN_CV_INSTALL_DIR)" == "false" ]; then
+    if [[ ! -f "$PATH_TO_OPEN_CV_INSTALL_DIR/lib/libopencv_core.a" ]]; then
 
 
         ECHO_INFO "Starting OpenCV build..."
@@ -108,7 +108,7 @@ startOpenCVBuild(){
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="$PATH_TO_OPEN_CV_INSTALL_DIR" \
             -DCMAKE_INSTALL_LIBDIR=lib \
-            -DBUILD_SHARED_LIBS=ON \
+            -DBUILD_SHARED_LIBS=OFF \
             -DBUILD_TESTS=OFF \
             -DBUILD_PERF_TESTS=OFF \
             -DBUILD_EXAMPLES=OFF \

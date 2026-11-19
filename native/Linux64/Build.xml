@@ -1,0 +1,38 @@
+<xml>
+  <target id="haxe">
+    <lib name="-Wl,--whole-archive" />
+    <lib name="${this_dir}/opencv.a" />
+    <lib name="-Wl,--no-whole-archive" />
+    <lib name="-Wl,--start-group" />
+    <lib name="${this_dir}/liblibjasper.a" />
+    <lib name="${this_dir}/libopencv_calib3d.a" />
+    <lib name="${this_dir}/libopencv_contrib.a" />
+    <lib name="${this_dir}/libopencv_core.a" />
+    <lib name="${this_dir}/libopencv_features2d.a" />
+    <lib name="${this_dir}/libopencv_flann.a" />
+    <lib name="${this_dir}/libopencv_highgui.a" />
+    <lib name="${this_dir}/libopencv_imgproc.a" />
+    <lib name="${this_dir}/libopencv_legacy.a" />
+    <lib name="${this_dir}/libopencv_ml.a" />
+    <lib name="${this_dir}/libopencv_nonfree.a" />
+    <lib name="${this_dir}/libopencv_objdetect.a" />
+    <lib name="${this_dir}/libopencv_photo.a" />
+    <lib name="${this_dir}/libopencv_stitching.a" />
+    <lib name="${this_dir}/libopencv_superres.a" />
+    <lib name="${this_dir}/libopencv_ts.a" />
+    <lib name="${this_dir}/libopencv_video.a" />
+    <lib name="${this_dir}/libopencv_videostab.a" />
+    <lib name="-Wl,--end-group" />
+    <lib name="-lextra_component-NOTFOUND" />
+    <lib name="-ltiff" />
+    <lib name="-lpng" />
+    <lib name="-ljpeg" />
+    <lib name="-ldc1394" />
+    <lib name="-lz" />
+    <lib name="-lrt" />
+    <lib name="-lpthread" />
+    <lib name="-lm" />
+    <lib name="-ldl" />
+    <lib name="-lstdc++" />
+  </target>
+</xml>

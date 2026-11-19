@@ -1,10 +1,17 @@
 package cv;
 
-import haxe.io.Path;
-
+@:cppFileCode('extern "C" void hx_opencv_entry();')
 class NativeLibrary {
+    static var initialized:Bool = false;
+
+    @:functionCode('hx_opencv_entry();')
+    static function initialize():Void {}
+
     public static function load(library:String, primitive:String, argumentCount:Int):Dynamic {
-        var libraryPath:String = Path.join([Path.directory(Sys.programPath()), "native", library]);
-        return cpp.Lib.load(libraryPath, primitive, argumentCount);
+        if (!initialized) {
+            initialize();
+            initialized = true;
+        }
+        return cpp.Lib.load(library, primitive, argumentCount);
     }
 }
