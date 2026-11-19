@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # ===== CONFIG =====
+
 PATH_TO_VENDOR_DIR="./vendor"
+PATH_TO_TEMP_DIR="$PATH_TO_VENDOR_DIR/.temp"
 PATH_TO_VENDOR_SOURCE_DIR="$PATH_TO_VENDOR_DIR/source"
 
 ## openCV config
@@ -15,34 +17,76 @@ OPEN_CV_SOURCE_URL="https://github.com/opencv/opencv/archive/refs/tags/2.4.13.7.
 
 
 init(){
+
+    ## just in case cleanup and initial setup of folders
+    removeTempDir
     validateDir $PATH_TO_VENDOR_DIR
     validateDir $PATH_TO_VENDOR_SOURCE_DIR
 
 
-
-
     validateOpenCVBuild
-}
 
+    ## just in case cleanup
+    removeTempDir
+}
 
 validateOpenCVBuild(){
-    echo "Validating OpenCV build..."
+    ECHO_INFO "Validating OpenCV build..."
     validateOpenCVSource
-
 }
+
+
+
+
+
+
+
 
 
 validateOpenCVSource(){
-    echo "Validating OpenCV source..."
+    ECHO_INFO "Validating OpenCV source..."
 
+    if [ "$(doesDirExists $PATH_TO_OPEN_CV_SOURCE_DIR)" == "true" ]; then
+        ECHO_INFO "OpenCV source directory already exists."
+        if requestConfirm "Do you want to delete the existing OpenCV source directory and action redownload?"; then
+            ECHO_WARN "Deleting existing OpenCV source directory..."
+            rm -rf $PATH_TO_OPEN_CV_SOURCE_DIR
+        else
+            ECHO_INFO "Will proceed with current openCV version."
+        fi
+    fi
+
+    ## Check if OpenCV source directory exists after potential deletion
     if [ "$(doesDirExists $PATH_TO_OPEN_CV_SOURCE_DIR)" == "false" ]; then
-        echo "Directory $PATH_TO_OPEN_CV_SOURCE_DIR does not exist. Creating now"
-        mkdir -p $PATH_TO_OPEN_CV_SOURCE_DIR
+        getOpenCVSource
     fi
 
 }
 
+getOpenCVSource(){
+    ECHO_INFO "Downloading OpenCV source..."
+    local path_to_zip="$PATH_TO_TEMP_DIR/$OPEN_CV_LIB_NAME.zip"
+    createTempDir
 
+    wget -O "$path_to_zip" $OPEN_CV_SOURCE_URL
+    # unzip "$PATH_TO_TEMP_DIR/opencv.zip" -d "$PATH_TO_OPEN_CV_SOURCE_DIR"
+
+    ECHO_WARN "Directory $PATH_TO_OPEN_CV_SOURCE_DIR does not exist. Creating now"
+    mkdir -p $PATH_TO_OPEN_CV_SOURCE_DIR
+    ## ensure that code is in top-level of the source directory
+    bsdtar -xf "$path_to_zip" -C "$PATH_TO_OPEN_CV_SOURCE_DIR" --strip-components=1
+    removeTempDir
+}
+
+createTempDir(){
+    validateDir $PATH_TO_TEMP_DIR
+}
+
+removeTempDir(){
+    if [ "$(doesDirExists $PATH_TO_TEMP_DIR)" == "true" ]; then
+        rm -rf $PATH_TO_TEMP_DIR
+    fi
+}
 
 
 
@@ -74,6 +118,43 @@ validateDir(){
         echo "Directory $1 does not exist. Creating now"
         mkdir -p $1
     fi
+}
+
+requestConfirm() {
+    # Prompt the user for confirmation (y/n).
+    # Usage: requestConfirm "Question?" [doExit]
+    #   $1: Question to display.
+    #   $2: Optional boolean (true/false). If true, exits on no (default: false).
+    # Returns: 0 for yes, 1 for no (unless doExit=true).
+    # Example:
+    #   requestConfirm "Continue?" true
+    #   if requestConfirm "Install dependencies?"; then echo "Installing..."; fi
+
+
+    local answer
+    local doExit="${2:-false}"
+
+    read -r -p $'\033[0;32m'"$1 [y/n]: "$'\033[0m' answer
+
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        return 0
+    fi
+
+    [[ "$doExit" == "true" ]] && exit 1
+    return 1
+}
+
+
+ECHO_INFO() {
+    echo -e "\033[0;34m$*\033[0m"
+}
+
+ECHO_WARN() {
+    echo -e "\033[0;33mWARN: $*\033[0m"
+}
+
+ECHO_ERROR() {
+    echo -e "\033[0;31mERROR: $*\033[0m"
 }
 
 
