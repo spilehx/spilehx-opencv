@@ -48,6 +48,7 @@ buildOpenCVNdll(){
 
     createTempDir
 
+    rm -rf $PATH_TO_VENDOR_NDLL_DIR
     validateDir $PATH_TO_VENDOR_NDLL_DIR
     haxelib run hxcpp Build.xml -DHXCPP_M64 \
         -I"$PATH_TO_VENDOR_DIR" \

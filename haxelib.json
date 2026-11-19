@@ -1,10 +1,11 @@
 {
     "name":         "spilehx-opencv",
     "license":      "MIT",
-    "tags":         ["cpp","neko"],
-    "description":  "Bindings to OpenCV 2.4.5 (using QT 4.8.2 and OpenGL)",
+    "tags":         ["cpp","opencv","linux"],
+    "description":  "Haxe bindings to OpenCV 2.4.13.7 for Linux x86_64 C++ applications",
+    "url":          "https://github.com/spilehx/spilehx-opencv",
     "version":      "0.0.4",
-    "releasenote":  "test",
+    "releasenote":  "Linux x86_64 native runtime with automatic deployment for C++ applications.",
     "contributors": ["spilehx"],
     "dependencies": {
         "hxcpp": ""
