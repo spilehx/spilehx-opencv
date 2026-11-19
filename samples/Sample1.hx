@@ -3,7 +3,7 @@ import cv.HighGUI;
 
 class Sample1 {
     static function main() {
-        haxe.Log.trace = function (m,?_) neko.Lib.println(Std.string(m));
+        haxe.Log.trace = function (m,?_) Sys.println(Std.string(m));
 
         // Must be done once per application in main thread.
         Core.init();

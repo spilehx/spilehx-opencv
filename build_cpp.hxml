@@ -1,0 +1,17 @@
+-cp .
+-cp samples
+-main Sample1
+-cpp build
+-D HXCPP_M64
+
+
+
+
+# -cpp build
+# -dce full
+
+
+
+## Move binary to bin and remove build to clean up
+--next 
+--cmd mkdir -p ./bin && find ./build -maxdepth 1 -type f ! -name "*.*" -exec mv -t ./bin -- {} +
