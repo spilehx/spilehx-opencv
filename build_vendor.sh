@@ -45,7 +45,9 @@ validateOpenCVBuild(){
 
 buildOpenCVNdll(){
     ECHO_INFO "Building OpenCV NDLL..."
-    haxelib run hxcpp Build.xml -DHXCPP_M64 -DOPENCV_INCLUDE_DIR=vendor/lib/opencv/include -DOPENCV_LIB_DIR=vendor/lib/opencv/lib
+    haxelib run hxcpp Build.xml -DHXCPP_M64 \
+        -DOPENCV_INCLUDE_DIR="$PATH_TO_OPEN_CV_INSTALL_DIR/include" \
+        -DOPENCV_LIB_DIR="$PATH_TO_OPEN_CV_INSTALL_DIR/lib"
 
 }
 
