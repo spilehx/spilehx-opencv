@@ -5,18 +5,18 @@ set -euo pipefail
 
 # ===== CONFIG =====
 
-PATH_TO_VENDOR_DIR="./vendor"
-PATH_TO_TEMP_DIR="$PATH_TO_VENDOR_DIR/.temp"
-PATH_TO_VENDOR_SOURCE_DIR="$PATH_TO_VENDOR_DIR/source"
-PATH_TO_VENDOR_LIB_DIR="$PATH_TO_VENDOR_DIR/lib"
+# PATH_TO_VENDOR_DIR="./vendor"
+# PATH_TO_TEMP_DIR="$PATH_TO_VENDOR_DIR/.temp"
+# PATH_TO_VENDOR_SOURCE_DIR="$PATH_TO_VENDOR_DIR/source"
+# PATH_TO_VENDOR_LIB_DIR="$PATH_TO_VENDOR_DIR/lib"
 
-## openCV config
-OPEN_CV_LIB_NAME="opencv"
-PATH_TO_OPEN_CV_SOURCE_DIR="$PATH_TO_VENDOR_SOURCE_DIR/$OPEN_CV_LIB_NAME"
-PATH_TO_OPEN_CV_SOURCE_BUILD_DIR="$PATH_TO_OPEN_CV_SOURCE_DIR/build"
-PATH_TO_OPEN_CV_INSTALL_DIR="$PATH_TO_VENDOR_LIB_DIR/$OPEN_CV_LIB_NAME"
+# ## openCV config
+# OPEN_CV_LIB_NAME="opencv"
+# PATH_TO_OPEN_CV_SOURCE_DIR="$PATH_TO_VENDOR_SOURCE_DIR/$OPEN_CV_LIB_NAME"
+# PATH_TO_OPEN_CV_SOURCE_BUILD_DIR="$PATH_TO_OPEN_CV_SOURCE_DIR/build"
+# PATH_TO_OPEN_CV_INSTALL_DIR="$PATH_TO_VENDOR_LIB_DIR/$OPEN_CV_LIB_NAME"
 
-OPEN_CV_SOURCE_URL="https://github.com/opencv/opencv/archive/refs/tags/2.4.13.7.zip"
+# OPEN_CV_SOURCE_URL="https://github.com/opencv/opencv/archive/refs/tags/2.4.13.7.zip"
 
 
 
@@ -40,6 +40,13 @@ validateOpenCVBuild(){
     ECHO_INFO "Validating OpenCV build..."
     validateOpenCVSource
     startOpenCVBuild
+    buildOpenCVNdll
+}
+
+buildOpenCVNdll(){
+    ECHO_INFO "Building OpenCV NDLL..."
+    haxelib run hxcpp Build.xml -DHXCPP_M64 -DOPENCV_INCLUDE_DIR=vendor/lib/opencv/include -DOPENCV_LIB_DIR=vendor/lib/opencv/lib
+
 }
 
 startOpenCVBuild(){
@@ -51,76 +58,79 @@ startOpenCVBuild(){
         if requestConfirm "Do you want to delete the existing OpenCV install directory and rebuild?"; then
             ECHO_WARN "Deleting existing OpenCV source and lib directory..."
             rm -rf $PATH_TO_OPEN_CV_INSTALL_DIR
-        else
-            exit 0
         fi
     fi
 
-    ECHO_INFO "Starting OpenCV build..."
-    # Add build steps here
 
-    if ! command -v cmake >/dev/null 2>&1; then
-        ECHO_ERROR "CMake is required to build OpenCV." >&2
-        exit 1
+    if [ "$(doesDirExists $PATH_TO_OPEN_CV_INSTALL_DIR)" == "false" ]; then
+
+
+        ECHO_INFO "Starting OpenCV build..."
+
+        if ! command -v cmake >/dev/null 2>&1; then
+            ECHO_ERROR "CMake is required to build OpenCV." >&2
+            exit 1
+        fi
+
+
+        if [[ ! -f "$PATH_TO_OPEN_CV_SOURCE_DIR/CMakeLists.txt" ]]; then
+            ECHO_ERROR "OpenCV source not found at $PATH_TO_OPEN_CV_SOURCE_DIR" >&2
+            exit 1
+        fi
+
+
+        # OpenCV 2.4 explicitly selects a macOS policy behavior removed in CMake 4.
+        # This targeted, repeatable update lets current CMake configure the source.
+        if cmake --version | head -n 1 | grep -Eq 'version ([4-9]|[1-9][0-9]+)\.'; then
+            sed -i 's/cmake_policy(SET CMP0042 OLD)/cmake_policy(SET CMP0042 NEW)/' \
+                "$PATH_TO_OPEN_CV_SOURCE_DIR/CMakeLists.txt"
+        fi
+
+        validateDir $PATH_TO_OPEN_CV_INSTALL_DIR
+
+        ECHO_INFO "Building OpenCV in $PATH_TO_OPEN_CV_SOURCE_BUILD_DIR"
+        # Keep the legacy OpenCV installation separate from system libraries.
+        # Qt provides the button, overlay and status bar functions used by the wrapper.
+        # Video codecs and GPU support are unnecessary for the image samples.
+        cmake -S "$PATH_TO_OPEN_CV_SOURCE_DIR" -B "$PATH_TO_OPEN_CV_SOURCE_BUILD_DIR" \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$PATH_TO_OPEN_CV_INSTALL_DIR" \
+            -DCMAKE_INSTALL_LIBDIR=lib \
+            -DBUILD_SHARED_LIBS=ON \
+            -DBUILD_TESTS=OFF \
+            -DBUILD_PERF_TESTS=OFF \
+            -DBUILD_EXAMPLES=OFF \
+            -DBUILD_DOCS=OFF \
+            -DBUILD_opencv_apps=OFF \
+            -DBUILD_opencv_python=OFF \
+            -DBUILD_opencv_java=OFF \
+            -DBUILD_opencv_gpu=OFF \
+            -DBUILD_opencv_ocl=OFF \
+            -DBUILD_opencv_nonfree=ON \
+            -DBUILD_opencv_contrib=ON \
+            -DBUILD_opencv_legacy=ON \
+            -DWITH_CUDA=OFF \
+            -DWITH_OPENCL=OFF \
+            -DWITH_FFMPEG=OFF \
+            -DWITH_GSTREAMER=OFF \
+            -DWITH_OPENEXR=OFF \
+            -DWITH_QT=ON \
+            -DWITH_GTK=ON
+
+        echo ""
+        ECHO_INFO "Configuring OpenCV build with CMake..."
+        cmake --build "$PATH_TO_OPEN_CV_SOURCE_BUILD_DIR" --parallel "${JOBS:-4}"
+        cmake --install "$PATH_TO_OPEN_CV_SOURCE_BUILD_DIR"
+
+
+        echo ""
+        ECHO_INFO "OpenCV build and installation completed."
+
+        echo "OpenCV headers installed to: $PATH_TO_OPEN_CV_INSTALL_DIR/include"
+        echo "OpenCV libraries installed to: $PATH_TO_OPEN_CV_INSTALL_DIR/lib"
+
     fi
-
-
-    if [[ ! -f "$PATH_TO_OPEN_CV_SOURCE_DIR/CMakeLists.txt" ]]; then
-        ECHO_ERROR "OpenCV source not found at $PATH_TO_OPEN_CV_SOURCE_DIR" >&2
-        exit 1
-    fi
-
-
-    # OpenCV 2.4 explicitly selects a macOS policy behavior removed in CMake 4.
-    # This targeted, repeatable update lets current CMake configure the source.
-    if cmake --version | head -n 1 | grep -Eq 'version ([4-9]|[1-9][0-9]+)\.'; then
-        sed -i 's/cmake_policy(SET CMP0042 OLD)/cmake_policy(SET CMP0042 NEW)/' \
-            "$PATH_TO_OPEN_CV_SOURCE_DIR/CMakeLists.txt"
-    fi
-
-    validateDir $PATH_TO_OPEN_CV_INSTALL_DIR
-
-    ECHO_INFO "Building OpenCV in $PATH_TO_OPEN_CV_SOURCE_BUILD_DIR"
-    # Keep the legacy OpenCV installation separate from system libraries.
-    # GTK provides the window backend used by Sample1. Video codecs and GPU
-    # support are unnecessary for this image sample.
-    cmake -S "$PATH_TO_OPEN_CV_SOURCE_DIR" -B "$PATH_TO_OPEN_CV_SOURCE_BUILD_DIR" \
-        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX="$PATH_TO_OPEN_CV_INSTALL_DIR" \
-        -DCMAKE_INSTALL_LIBDIR=lib \
-        -DBUILD_SHARED_LIBS=ON \
-        -DBUILD_TESTS=OFF \
-        -DBUILD_PERF_TESTS=OFF \
-        -DBUILD_EXAMPLES=OFF \
-        -DBUILD_DOCS=OFF \
-        -DBUILD_opencv_apps=OFF \
-        -DBUILD_opencv_python=OFF \
-        -DBUILD_opencv_java=OFF \
-        -DBUILD_opencv_gpu=OFF \
-        -DBUILD_opencv_ocl=OFF \
-        -DBUILD_opencv_nonfree=ON \
-        -DBUILD_opencv_contrib=ON \
-        -DBUILD_opencv_legacy=ON \
-        -DWITH_CUDA=OFF \
-        -DWITH_OPENCL=OFF \
-        -DWITH_FFMPEG=OFF \
-        -DWITH_GSTREAMER=OFF \
-        -DWITH_OPENEXR=OFF \
-        -DWITH_QT=OFF \
-        -DWITH_GTK=ON
-
-    echo ""
-    ECHO_INFO "Configuring OpenCV build with CMake..."
-    cmake --build "$PATH_TO_OPEN_CV_SOURCE_BUILD_DIR" --parallel "${JOBS:-4}"
-    cmake --install "$PATH_TO_OPEN_CV_SOURCE_BUILD_DIR"
-
-
-    echo ""
-    ECHO_INFO "OpenCV build and installation completed."
-
-    echo "OpenCV headers installed to: $PATH_TO_OPEN_CV_INSTALL_DIR/include"
-    echo "OpenCV libraries installed to: $PATH_TO_OPEN_CV_INSTALL_DIR/lib"
 
 }
 
@@ -243,75 +253,10 @@ ECHO_ERROR() {
 PROJECT_ROOT_LOCATION=""
 setWorkingDirToScriptLocation
 
+source .env
+
 init
 
 
 
 
-
-
-
-
-
-
-
-
-
-# set -euo pipefail
-
-# project_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-# source_dir="$project_dir/vendor/source/opencv-2.4.13.7"
-# build_dir="$source_dir/build"
-# install_dir="$project_dir/vendor/opencv-install"
-
-# if ! command -v cmake >/dev/null 2>&1; then
-#     echo "CMake is required to build OpenCV." >&2
-#     exit 1
-# fi
-
-# if [[ ! -f "$source_dir/CMakeLists.txt" ]]; then
-#     echo "OpenCV source not found at $source_dir" >&2
-#     exit 1
-# fi
-
-# # OpenCV 2.4 explicitly selects a macOS policy behavior removed in CMake 4.
-# # This targeted, repeatable update lets current CMake configure the source.
-# if cmake --version | head -n 1 | grep -Eq 'version ([4-9]|[1-9][0-9]+)\.'; then
-#     sed -i 's/cmake_policy(SET CMP0042 OLD)/cmake_policy(SET CMP0042 NEW)/' \
-#         "$source_dir/CMakeLists.txt"
-# fi
-
-# # Keep the legacy OpenCV installation separate from system libraries.
-# # GTK provides the window backend used by Sample1. Video codecs and GPU
-# # support are unnecessary for this image sample.
-# cmake -S "$source_dir" -B "$build_dir" \
-#     -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-#     -DCMAKE_BUILD_TYPE=Release \
-#     -DCMAKE_INSTALL_PREFIX="$install_dir" \
-#     -DCMAKE_INSTALL_LIBDIR=lib \
-#     -DBUILD_SHARED_LIBS=ON \
-#     -DBUILD_TESTS=OFF \
-#     -DBUILD_PERF_TESTS=OFF \
-#     -DBUILD_EXAMPLES=OFF \
-#     -DBUILD_DOCS=OFF \
-#     -DBUILD_opencv_apps=OFF \
-#     -DBUILD_opencv_python=OFF \
-#     -DBUILD_opencv_java=OFF \
-#     -DBUILD_opencv_gpu=OFF \
-#     -DBUILD_opencv_ocl=OFF \
-#     -DBUILD_opencv_nonfree=ON \
-#     -DBUILD_opencv_contrib=ON \
-#     -DBUILD_opencv_legacy=ON \
-#     -DWITH_CUDA=OFF \
-#     -DWITH_OPENCL=OFF \
-#     -DWITH_FFMPEG=OFF \
-#     -DWITH_GSTREAMER=OFF \
-#     -DWITH_OPENEXR=OFF \
-#     -DWITH_QT=OFF \
-#     -DWITH_GTK=ON
-
-# cmake --build "$build_dir" --parallel "${JOBS:-4}"
-# cmake --install "$build_dir"
-
-# echo "OpenCV headers installed to: $install_dir/include"
-# echo "OpenCV libraries installed to: $install_dir/lib"
