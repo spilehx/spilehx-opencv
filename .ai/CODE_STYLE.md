@@ -1,5 +1,8 @@
 # Code style
 
+IMPORTANT: Only apply these rules to .hx files all other code must not be reviewed
+
+
 Follow the surrounding file when minor historical inconsistencies exist.
 
 ## Names and types

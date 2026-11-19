@@ -43,6 +43,19 @@ validateOpenCVBuild(){
 }
 
 startOpenCVBuild(){
+    echo ""
+
+    if [ "$(doesDirExists $PATH_TO_OPEN_CV_INSTALL_DIR)" == "true" ]; then
+        ECHO_INFO "OpenCV install already exists."
+
+        if requestConfirm "Do you want to delete the existing OpenCV install directory and rebuild?"; then
+            ECHO_WARN "Deleting existing OpenCV source and lib directory..."
+            rm -rf $PATH_TO_OPEN_CV_INSTALL_DIR
+        else
+            exit 0
+        fi
+    fi
+
     ECHO_INFO "Starting OpenCV build..."
     # Add build steps here
 
@@ -64,9 +77,6 @@ startOpenCVBuild(){
         sed -i 's/cmake_policy(SET CMP0042 OLD)/cmake_policy(SET CMP0042 NEW)/' \
             "$PATH_TO_OPEN_CV_SOURCE_DIR/CMakeLists.txt"
     fi
-
-
-
 
     validateDir $PATH_TO_OPEN_CV_INSTALL_DIR
 
@@ -100,37 +110,30 @@ startOpenCVBuild(){
         -DWITH_QT=OFF \
         -DWITH_GTK=ON
 
-
+    echo ""
     ECHO_INFO "Configuring OpenCV build with CMake..."
     cmake --build "$PATH_TO_OPEN_CV_SOURCE_BUILD_DIR" --parallel "${JOBS:-4}"
     cmake --install "$PATH_TO_OPEN_CV_SOURCE_BUILD_DIR"
 
 
+    echo ""
     ECHO_INFO "OpenCV build and installation completed."
 
     echo "OpenCV headers installed to: $PATH_TO_OPEN_CV_INSTALL_DIR/include"
     echo "OpenCV libraries installed to: $PATH_TO_OPEN_CV_INSTALL_DIR/lib"
 
-
-
-
-
 }
 
-
-
-
-
-
-
 validateOpenCVSource(){
+    echo ""
     ECHO_INFO "Validating OpenCV source..."
 
     if [ "$(doesDirExists $PATH_TO_OPEN_CV_SOURCE_DIR)" == "true" ]; then
         ECHO_INFO "OpenCV source directory already exists."
         if requestConfirm "Do you want to delete the existing OpenCV source directory and action redownload?"; then
-            ECHO_WARN "Deleting existing OpenCV source directory..."
+            ECHO_WARN "Deleting existing OpenCV source and lib directory..."
             rm -rf $PATH_TO_OPEN_CV_SOURCE_DIR
+            rm -rf $PATH_TO_OPEN_CV_INSTALL_DIR
         else
             ECHO_INFO "Will proceed with current openCV version."
         fi
@@ -242,7 +245,7 @@ ECHO_ERROR() {
 PROJECT_ROOT_LOCATION=""
 setWorkingDirToScriptLocation
 
-init $1
+init
 
 
 
