@@ -171,8 +171,6 @@ removeTempDir(){
     fi
 }
 
-
-
 #############################################
 gotToProjectRoot(){
     cd $PROJECT_ROOT_LOCATION
