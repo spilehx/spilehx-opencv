@@ -45,6 +45,7 @@ class TestBenchApplication {
 		return [
 			new TestFilter("Grey scale", ImageFilters.greyscale),
 			new TestFilter("Gaussian Blur", ImageFilters.gaussianBlur),
+            new TestFilter("Threshold", ImageFilters.threshold),
 			new TestFilter("DetectCorners", ImageFilters.detectCorners)
 		];
 	}
@@ -160,5 +161,11 @@ private class ImageFilters {
 			Core.circle(corners, Core.point(Math.round(point.x), Math.round(point.y)), 5, Core.rgb(255, 70, 70), 2);
 		}
 		return corners;
+	}
+	
+	public static function threshold(source:Mat):Mat {
+		var thresh:Mat = Core.createMat(source.rows, source.cols, Core._8UC1);
+		ImgProc.threshold(source, thresh, 128, 255, ImgProc.THRESH_BINARY);
+		return thresh;
 	}
 }
