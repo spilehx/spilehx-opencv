@@ -1,3 +1,5 @@
+import spilehx.cv.features2d.KeyPoint;
+import spilehx.cv.Features2D;
 import spilehx.cv.ImgProc;
 import spilehx.cv.Core;
 import spilehx.cv.core.Mat;
@@ -11,6 +13,10 @@ class TestBench {
 }
 
 class TestBenchApplication {
+	private static final INPUT_WINDOW_TITLE:String = "Input";
+	private static final CHECKBOX_WINDOW_TITLE:String = "Filters";
+	private static final OUTPUT_WINDOW_TITLE:String = "Output";
+
 	private var sourceImage:Mat;
 	private var outputImage:Mat;
 	private var filters:Array<TestFilter>;
@@ -22,12 +28,12 @@ class TestBenchApplication {
 		sourceImage = getImageInput("test.jpg");
 		outputImage = sourceImage;
 
-		showImageWindow("Input window", sourceImage);
+		showImageWindow(INPUT_WINDOW_TITLE, sourceImage);
 
 		filters = getFilters();
 		showFilterWindow(filters);
 
-		showImageWindow("Output window", outputImage);
+		showImageWindow(OUTPUT_WINDOW_TITLE, outputImage);
 
 		HighGUI.waitKey(0);
 		trace("waitKey(0) returned; exiting");
@@ -37,7 +43,9 @@ class TestBenchApplication {
 
 	private function getFilters():Array<TestFilter> {
 		return [
-			new TestFilter("Filter 2", ImageFilters.greyscale)
+			new TestFilter("Grey scale", ImageFilters.greyscale),
+			new TestFilter("Gaussian Blur", ImageFilters.gaussianBlur),
+			new TestFilter("DetectCorners", ImageFilters.detectCorners)
 		];
 	}
 
@@ -54,11 +62,11 @@ class TestBenchApplication {
 			}
 		}
 
-		HighGUI.showImage("Output window", outputImage);
+		HighGUI.showImage(OUTPUT_WINDOW_TITLE, outputImage);
 	}
 
 	private function showFilterWindow(filters:Array<TestFilter>):Void {
-		var title:String = "Filters";
+		var title:String = CHECKBOX_WINDOW_TITLE;
 		var height:Int = 20 + filters.length * 45;
 		var panel:Mat = Core.createMat(height, 220, Core._8UC3);
 		var redraw:Void->Void = function():Void {
@@ -87,7 +95,6 @@ class TestBenchApplication {
 				var top:Int = 20 + index * 45;
 				if (y >= top && y <= top + 24) {
 					applyFilter(filters[index], !filters[index].applied);
-					trace(filters[index].label + " checked: " + filters[index].applied);
 					redraw();
 					return;
 				}
@@ -135,5 +142,23 @@ private class ImageFilters {
 		var grey:Mat = Core.createMat(source.rows, source.cols, Core._8UC1);
 		ImgProc.cvtColor(source, grey, ImgProc.BGR2GRAY);
 		return grey;
+	}
+
+	public static function gaussianBlur(source:Mat):Mat {
+		var blurred:Mat = Core.createMat(source.rows, source.cols, Core._8UC1);
+		ImgProc.gaussianBlur(source, blurred, Core.size(9, 9), 2.0);
+		return blurred;
+	}
+
+	public static function detectCorners(source:Mat):Mat {
+		var detector = Features2D.gfft(80, 0.02, 12);
+		var keypoints:Array<KeyPoint> = [];
+		detector.detect(source, null, keypoints);
+		var corners:Mat = Core.cloneMat(source);
+		for (keypoint in keypoints) {
+			var point = keypoint.pt;
+			Core.circle(corners, Core.point(Math.round(point.x), Math.round(point.y)), 5, Core.rgb(255, 70, 70), 2);
+		}
+		return corners;
 	}
 }
