@@ -11,18 +11,23 @@ class TestBench {
 }
 
 class TestBenchApplication {
+	private var sourceImage:Mat;
+	private var outputImage:Mat;
 	public function new() {}
 
 	public function run() {
 		trace("TestBenchApplication running");
-		var image:Mat = getImageInput("test.jpg");
+		sourceImage = getImageInput("test.jpg");
+		outputImage = sourceImage;
+
+		showImageWindow("Input window", sourceImage);
+
+		showFilterWindow(getFilters());
+
+		outputImage = applyGreyscale(sourceImage);
+		showImageWindow("Output window", outputImage);
 
 
-		showImageWindow("Input window", image);
-
-		showFilterWindow();
-
-		showImageWindow("Greyscale window", applyGreyscale(image));
 
 		HighGUI.waitKey(0);
 		trace("waitKey(0) returned; exiting");
@@ -30,17 +35,60 @@ class TestBenchApplication {
 		Sys.exit(0);
 	}
 
+	private function getFilters():Array<TestFilter> {
+		return [
+			new TestFilter("Filter 1", filterCallBack),
+			new TestFilter("Filter 2", filterCallBack)
+		];
+	}
 
-	private function showFilterWindow(){
 
+	private function filterCallBack(checked:Bool):Void {
+		trace("Filter callback called with checked: " + checked);
 	}
 
 
 
 
+	private function showFilterWindow(filters:Array<TestFilter>):Void {
+		var title:String = "Filters";
+		var height:Int = 20 + filters.length * 45;
+		var panel:Mat = Core.createMat(height, 220, Core._8UC3);
+		var checked:Array<Bool> = filters.map(function(f) return false);
+		var redraw:Void->Void = function():Void {
+			Core.rectangle(panel, Core.point(0, 0), Core.point(219, height - 1), Core.gray(40), -1);
+			for (index in 0...filters.length) {
+				var top:Int = 20 + index * 45;
+				Core.rectangle(panel, Core.point(15, top), Core.point(39, top + 24), Core.gray(255), 1);
+				if (checked[index]) {
+					Core.line(panel, Core.point(20, top + 12), Core.point(25, top + 18), Core.gray(255), 2);
+					Core.line(panel, Core.point(25, top + 18), Core.point(35, top + 6), Core.gray(255), 2);
+				}
+				Core.putText(panel, filters[index].label, Core.point(55, top + 19), 0, 0.6, Core.gray(255));
+			}
+			HighGUI.showImage(title, panel);
+		};
 
+		HighGUI.namedWindow(title, HighGUI.WINDOW_AUTOSIZE | HighGUI.WINDOW_GUI_NORMAL);
+		redraw();
+		HighGUI.setMouseCallback(title, function(event:Int, x:Int, y:Int, flags:Int):Void {
+			if (event != HighGUI.EVENT_LBUTTONDOWN)
+				return;
+			if (x < 15 || x > 200)
+				return;
 
-
+			for (index in 0...filters.length) {
+				var top:Int = 20 + index * 45;
+				if (y >= top && y <= top + 24) {
+					checked[index] = !checked[index];
+					trace(filters[index].label + " checked: " + checked[index]);
+					filters[index].callBack(checked[index]);
+					redraw();
+					return;
+				}
+			}
+		});
+	}
 
 	private function showImageWindow(title:String, image:Mat) {
 		HighGUI.namedWindow(title, HighGUI.WINDOW_AUTOSIZE | HighGUI.WINDOW_GUI_NORMAL);
@@ -72,5 +120,12 @@ class TestBenchApplication {
 	}
 }
 
+private class TestFilter {
+	public var label(default, null):String;
+	public var callBack(default, null):Bool->Void;
 
-
+	public function new(label:String, callBack:Bool->Void) {
+		this.label = label;
+		this.callBack = callBack;
+	}
+}
