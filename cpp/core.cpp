@@ -372,7 +372,7 @@ value hx_cv_core_absDiff(value src1, value src2, value dst) {
     cvAbsDiff(val_data(src1), val_data(src2), val_data(dst));
     return val_null;
 }
-value hx_cv_core_absDiffS(value src, value dst, value _value) {
+value hx_cv_core_absDiffS(value src, value _value, value dst) {
     val_check_kind(_value, k_Scalar);
     cvAbsDiffS(val_data(src), val_data(dst), *(CvScalar*)val_data(_value));
     return val_null;
@@ -512,15 +512,9 @@ value hx_cv_core_getRealND(value arr, value idx) {
     delete[] _idx;
     return ret;
 }
-value hx_cv_core_getRows(value* args, int nargs) {
-    if (nargs != 5) hx_error();
-    value arr      = args[0];
-    value submat   = args[1];
-    value startRow = args[2];
-    value endRow   = args[3];
-    value deltaRow = args[4];
+value hx_cv_core_getRows(value arr, value submat, value startRow, value endRow, value deltaRow) {
     val_check_kind(submat, k_Mat);
-    return CONVERT(core, Mat, cvGetRows(val_data(arr), (CvMat*)val_data(submat), val_get<int>(startRow), val_get<int>(endRow)));
+    return CONVERT(core, Mat, cvGetRows(val_data(arr), (CvMat*)val_data(submat), val_get<int>(startRow), val_get<int>(endRow), val_get<int>(deltaRow)));
 }
 value hx_cv_core_getSize(value arr) {
     return cv_Size(cvGetSize(val_data(arr)));
@@ -614,7 +608,7 @@ DEFINE_PRIM(hx_cv_core_getReal1D,       2);
 DEFINE_PRIM(hx_cv_core_getReal2D,       3);
 DEFINE_PRIM(hx_cv_core_getReal3D,       4);
 DEFINE_PRIM(hx_cv_core_getRealND,       2);
-DEFINE_PRIM_MULT(hx_cv_core_getRows);
+DEFINE_PRIM(hx_cv_core_getRows,         5);
 DEFINE_PRIM(hx_cv_core_getSize,         1);
 DEFINE_PRIM(hx_cv_core_getSubRect,      3);
 DEFINE_PRIM(hx_cv_core_magnitude,       3);

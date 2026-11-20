@@ -32,11 +32,14 @@ class Video implements CvProcs {
     // arrays currFeatures, status, and error will be resized as necessary by this call
     // to match the size of prevFeatures.
     @:CvProc function calcOpticalFlowPyrLK(prev:Arr, curr:Arr, prevPyr:Null<Arr>, currPyr:Null<Arr>, prevFeatures:Array<Point2D32f>, currFeatures:Array<Point2D32f>, winSize:Size, level:Int, status:Array<Bool>, error:Null<Array<Float>>, criteria:TermCriteria, flags:Int) {
+        if ((flags & LKFLOW_INITIAL_GUESSES) != 0 && currFeatures.length < prevFeatures.length)
+            throw "calcOpticalFlowPyrLK :: currFeatures must contain an initial guess for each previous feature";
         var currs = NativeBinding.mapNative(currFeatures);
         load("calcOpticalFlowPyrLK", 13)(prev.nativeObject, curr.nativeObject, NativeBinding.native(prevPyr), NativeBinding.native(currPyr), NativeBinding.mapNative(prevFeatures), currs, prevFeatures.length, winSize.nativeObject, level, status, error, criteria.nativeObject, flags);
         for (i in currFeatures.length...currs.length)
             currFeatures[i] = new Point2D32f(currs[i]);
+        currFeatures.resize(currs.length);
     }
 
-    @:CvProc function calcOpticalFlowFarneback(prev:Arr, curr:Arr, flow:Arr, pyrScale:Float, levels:Int, winSize:Int, iterations:Int, polyN:Int, polySigma:Int, flags:Int):Void;
+    @:CvProc function calcOpticalFlowFarneback(prev:Arr, curr:Arr, flow:Arr, pyrScale:Float, levels:Int, winSize:Int, iterations:Int, polyN:Int, polySigma:Float, flags:Int):Void;
 }

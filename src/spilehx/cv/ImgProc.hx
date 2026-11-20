@@ -206,7 +206,7 @@ class ImgProc implements CvProcs {
     @:CvProc function equalizeHistAdaptive(src:Mat, dst:Mat, windowRows:Int, windowCols:Int, limit:Float=1.0, cutoff:Float=1.0):Void;
     @:CvProc(anchor=Core.point(-1,-1)) function filter2D(src:Arr, dst:Arr, kernel:Mat, ?anchor:Null<Point>):Void;
     @:CvProc(borderType=BORDER_DEFAULT) function gaussianBlur(src:Arr, dst:Arr, ksize:Size, sigmaX:Float, sigmaY:Float=0.0, ?borderType:Null<Int>):Void;
-    @:CvProc function threshold(src:Arr, dst:Arr, threshold:Float, maxValue:Float, thresholdType:Int):Void;
+    @:CvProc function threshold(src:Arr, dst:Arr, threshold:Float, maxValue:Float, thresholdType:Int):Float;
     @:CvProc function medianBlur(src:Arr, dst:Arr, ksize:Int):Void;
     @:CvProc function morphologyEx(src:Arr, dst:Arr, tmp:Null<Arr>, element:ConvKernel, operation:Int, iterations:Int=1) {
         @:CvCheck(tmp) if (tmp == null && (operation == MOP_GRADIENT)) throw "tmp Arr required for MOP_GRADIENT";

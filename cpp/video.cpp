@@ -72,6 +72,8 @@ value hx_cv_video_calcOpticalFlowPyrLK(value* args, int nargs) {
     val_check(prevFeatures, array);
     val_check(currFeatures, array);
     val_check(status,       array);
+    if (count < 0 || count != val_array_size(prevFeatures)) hx_error();
+    if ((flags & CV_LKFLOW_INITIAL_GUESSES) && val_array_size(currFeatures) < count) hx_error();
     CvPoint2D32f* _prev   = new CvPoint2D32f[count];
     CvPoint2D32f* _curr   = new CvPoint2D32f[count];
     char*         _status = new char[count];
@@ -81,10 +83,12 @@ value hx_cv_video_calcOpticalFlowPyrLK(value* args, int nargs) {
         _prev[i].x = p->x;
         _prev[i].y = p->y;
     }
-    for (int i = 0; i < val_array_size(currFeatures); i++) {
-        CvPoint2D32f* p = (CvPoint2D32f*)val_data(val_array_i(currFeatures, i));
-        _curr[i].x = p->x;
-        _curr[i].y = p->y;
+    if (flags & CV_LKFLOW_INITIAL_GUESSES) {
+        for (int i = 0; i < count; i++) {
+            CvPoint2D32f* p = (CvPoint2D32f*)val_data(val_array_i(currFeatures, i));
+            _curr[i].x = p->x;
+            _curr[i].y = p->y;
+        }
     }
     if (!val_is_null(track_error)) {
         val_check(track_error, array);
@@ -96,13 +100,10 @@ value hx_cv_video_calcOpticalFlowPyrLK(value* args, int nargs) {
     cvCalcOpticalFlowPyrLK(prev, curr, prevPyr, currPyr, _prev, _curr, count, *(CvSize*)val_data(winSize), level, _status, _error, *(CvTermCriteria*)val_data(criteria), flags);
 
     int nval = val_array_size(currFeatures);
-    if (count > nval)
-        val_array_set_size(currFeatures, count);
-    if (count > val_array_size(status))
-        val_array_set_size(status, count);
+    val_array_set_size(currFeatures, count);
+    val_array_set_size(status, count);
     if (!val_is_null(track_error)) {
-        if (count > val_array_size(track_error))
-            val_array_set_size(track_error, count);
+        val_array_set_size(track_error, count);
     }
     for (int i = 0; i < count; i++) {
         if (i >= nval) {
