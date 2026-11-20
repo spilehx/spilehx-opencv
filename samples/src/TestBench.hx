@@ -37,23 +37,12 @@ class TestBenchApplication {
 
 	private function getFilters():Array<TestFilter> {
 		return [
-			// new TestFilter("Filter 1", function(checked:Bool):Void {
-			// 	filterCallBack(checked, ImageFilters.greyscale);
-			// }),
-			new TestFilter("Filter 2", function(checked:Bool):Void {
-				filterCallBack(checked, ImageFilters.greyscale);
-			})
+			new TestFilter("Filter 2", ImageFilters.greyscale)
 		];
-	}
-
-	private function filterCallBack(checked:Bool, filter:Bool->Mat->Mat):Void {
-		trace("Filter callback called with checked: " + checked);
-		outputImage = filter(checked, outputImage);
 	}
 
 	private function applyFilter(filter:TestFilter, checked:Bool):Void {
 		filter.applied = checked;
-		// filter.callBack(checked);
 		updateWithFilters();
 	}
 
@@ -61,7 +50,7 @@ class TestBenchApplication {
 		outputImage = sourceImage;
 		for (filter in filters) {
 			if (filter.applied) {
-				filter.callBack(true);
+				outputImage = filter.callBack(outputImage);
 			}
 		}
 
@@ -72,13 +61,12 @@ class TestBenchApplication {
 		var title:String = "Filters";
 		var height:Int = 20 + filters.length * 45;
 		var panel:Mat = Core.createMat(height, 220, Core._8UC3);
-		var checked:Array<Bool> = filters.map(function(f) return false);
 		var redraw:Void->Void = function():Void {
 			Core.rectangle(panel, Core.point(0, 0), Core.point(219, height - 1), Core.gray(40), -1);
 			for (index in 0...filters.length) {
 				var top:Int = 20 + index * 45;
 				Core.rectangle(panel, Core.point(15, top), Core.point(39, top + 24), Core.gray(255), 1);
-				if (checked[index]) {
+				if (filters[index].applied) {
 					Core.line(panel, Core.point(20, top + 12), Core.point(25, top + 18), Core.gray(255), 2);
 					Core.line(panel, Core.point(25, top + 18), Core.point(35, top + 6), Core.gray(255), 2);
 				}
@@ -98,10 +86,8 @@ class TestBenchApplication {
 			for (index in 0...filters.length) {
 				var top:Int = 20 + index * 45;
 				if (y >= top && y <= top + 24) {
-					checked[index] = !checked[index];
-					trace(filters[index].label + " checked: " + checked[index]);
-					// filters[index].callBack(checked[index]);
-					applyFilter(filters[index], checked[index]);
+					applyFilter(filters[index], !filters[index].applied);
+					trace(filters[index].label + " checked: " + filters[index].applied);
 					redraw();
 					return;
 				}
@@ -134,10 +120,10 @@ class TestBenchApplication {
 
 private class TestFilter {
 	public var label(default, null):String;
-	public var callBack(default, null):Bool->Void;
+	public var callBack(default, null):Mat->Mat;
 	public var applied:Bool = false;
 
-	public function new(label:String, callBack:Bool->Void) {
+	public function new(label:String, callBack:Mat->Mat) {
 		this.label = label;
 		this.callBack = callBack;
 		this.applied = false;
@@ -145,10 +131,7 @@ private class TestFilter {
 }
 
 private class ImageFilters {
-	public static function greyscale(apply:Bool, source:Mat):Mat {
-		if (!apply)
-			return source;
-
+	public static function greyscale(source:Mat):Mat {
 		var grey:Mat = Core.createMat(source.rows, source.cols, Core._8UC1);
 		ImgProc.cvtColor(source, grey, ImgProc.BGR2GRAY);
 		return grey;
