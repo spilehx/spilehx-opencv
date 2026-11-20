@@ -1,33 +1,28 @@
-#include <core/core_c.h>
+#pragma once
+
+#include <opencv2/core.hpp>
 #include "utils.h"
 
-#define INIT_POINT2D(N) \
-    DECLARE_KIND(k_##N)
-INIT_POINT2D(Point);
-INIT_POINT2D(Point2D32f);
-INIT_POINT2D(Point2D64f);
-
-#define INIT_POINT3D(N) \
-    DECLARE_KIND(k_##N)
-INIT_POINT3D(Point3D32f);
-INIT_POINT3D(Point3D64f);
-
-#define INIT_SIZE2D(N) \
-    DECLARE_KIND(k_##N)
-INIT_SIZE2D(Size);
-INIT_SIZE2D(Size2D32f);
-
-DECLARE_KIND(k_Rect);
-DECLARE_KIND(k_Scalar);
-DECLARE_KIND(k_TermCriteria);
 DECLARE_KIND(k_Mat);
-DECLARE_KIND(k_Image);
+cv::Mat& hx_cv_core_mat(value handle);
+value hx_cv_core_toMat(cv::Mat* matrix);
+// Null masks and kernels are represented by empty matrices.
+cv::Mat hx_cv_core_optionalMat(value handle);
 
-GDECLARE_CONVERT(Ipl, core, Image);
-PDECLARE_CONVERT(core, Mat);
-PDECLARE_CONVERT(core, Scalar);
-PDECLARE_CONVERT(core, Size);
-PDECLARE_CONVERT(core, Point);
-PDECLARE_CONVERT(core, Point2D32f);
+#define CORE_TYPE(name, type) \
+    DECLARE_KIND(k_##name); \
+    type& hx_cv_core_as##name(value handle); \
+    value hx_cv_core_to##name(type* object)
 
-extern "C" { void core_allocateKinds(); }
+CORE_TYPE(Point, cv::Point);
+CORE_TYPE(Point2D32f, cv::Point2f);
+CORE_TYPE(Point2D64f, cv::Point2d);
+CORE_TYPE(Point3D32f, cv::Point3f);
+CORE_TYPE(Point3D64f, cv::Point3d);
+CORE_TYPE(Size, cv::Size);
+CORE_TYPE(Size2D32f, cv::Size2f);
+CORE_TYPE(Rect, cv::Rect);
+CORE_TYPE(Scalar, cv::Scalar);
+CORE_TYPE(TermCriteria, cv::TermCriteria);
+
+extern "C" void core_allocateKinds();

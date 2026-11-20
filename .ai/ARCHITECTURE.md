@@ -1,53 +1,100 @@
 # Architecture map
 
-Implementation takes precedence if this map becomes outdated. See [working practices](WAYS_OF_WORKING.md), [code style](CODE_STYLE.md), and the [README](../README.md) for development constraints, installation, packaging, and release instructions.
+Implementation takes precedence if this map becomes outdated. See [working practices](WAYS_OF_WORKING.md), [code style](CODE_STYLE.md), and the [README](../README.md) for build instructions, API changes and tested limitations.
 
 ## Scope and entry points
 
-`spilehx-opencv` is a Haxe library binding OpenCV 2.4.13.7 through hxcpp CFFI. The supported consumer target is Linux x86_64 C++, with OpenCV and the wrapper statically linked into the consumer executable. Compatible system libraries are still needed.
+`spilehx-opencv` binds OpenCV 5.1.0 through hxcpp CFFI for Linux x86_64 C++.
+The wrapper, OpenCV and installed bundled dependencies are static archives;
+compatible system libraries, including Qt5 and image codecs, remain required.
 
-- Consumer applications supply their own `main` and use `-lib spilehx-opencv`. `haxelib.json` declares the package, `src` class path, and hxcpp dependency; `extraParams.hxml` invokes `spilehx.internal.Build.configure()`.
-- `src/spilehx/internal/Build.hx` rejects unsupported targets, defines `HXCPP_M64`, and adds the `native/Linux64/Build.xml` include to `spilehx.internal.NativeLibrary` through build metadata. Display/no-output compilation skips this setup.
-- `make` delegates to `package-haxelib.sh`, the native build/package entry point.
+- Consumers provide a main class and use `-lib spilehx-opencv`. `haxelib.json`
+  declares the `src` class path and hxcpp dependency; `extraParams.hxml` invokes
+  `spilehx.internal.Build.configure()`.
+- That macro rejects unsupported targets, defines `HXCPP_M64` and adds the generated
+  native linker XML to `NativeLibrary`. Display/no-output compilation skips setup.
+- `make` delegates to `package-haxelib.sh`.
 
 ## Code locations
 
-`src/spilehx/internal/` contains implementation support required by consumers during compilation and native binding use. Its types use `@:noCompletion` and `@:noDoc` to suppress completion suggestions and generated documentation; the package name does not enforce privacy.
-
 | Haxe API | Native implementation | Responsibility |
 | --- | --- | --- |
-| `src/spilehx/cv/Core.hx`, `src/spilehx/cv/core/` | `cpp/core.cpp`, `cpp/core.h` | Images, matrices, geometry, scalars, array operations, drawing, fonts |
-| `src/spilehx/cv/ImgProc.hx` | `cpp/imgproc.cpp`, `cpp/imgproc.h` | Image processing, filters, transforms, morphology |
-| `src/spilehx/cv/HighGUI.hx`, `src/spilehx/cv/highgui/Capture.hx` | `cpp/highgui.cpp`, `cpp/highgui.h` | Image IO, windows, callbacks, file capture |
-| `src/spilehx/cv/Video.hx` | `cpp/video.cpp`, `cpp/video.h` | Optical flow, including array output marshalling |
-| `src/spilehx/cv/Features2D.hx`, `src/spilehx/cv/features2d/` | `cpp/features2d.cpp`, `cpp/features2d.h` | BRISK, GFFT, keypoints |
-| `src/spilehx/cv/NonFree.hx`, `src/spilehx/cv/nonfree/` | `cpp/nonfree.cpp`, `cpp/nonfree.h` | SIFT and SURF |
+| `Core.hx`, `core/` | `cpp/core.*` | Mat, geometry, scalars, criteria, arithmetic, indexing, views, transforms and drawing |
+| `ImgProc.hx` | `cpp/imgproc.*` | Filters, morphology, CLAHE, color conversion, integral/distance operations, accumulators and corners |
+| `Features2D.hx`, `features2d/` | `cpp/features2d.*` | GFTTDetector, SIFT, keypoints and descriptor Mats |
+| `Video.hx` | `cpp/video.*` | Sparse PyrLK and dense Farneback flow |
+| `HighGUI.hx`, `highgui/Capture.hx` | `cpp/highgui.*` | Image IO, ordinary windows, rooted callbacks and file capture |
 
-`src/spilehx/internal/NativeBinding.hx` stores opaque native handles and supplies null-aware handle/array conversions. `src/spilehx/internal/Macros.hx` generates facade methods. `cpp/utils.h` centralizes CFFI value conversions, property/constant macros, and finalizer helpers. `cpp/main.cpp` initializes all modules' native kinds.
+Haxe paths in the table are relative to `src/spilehx/cv/`.
+`src/spilehx/internal/` provides the native handles, loader, API macros and build
+configuration. Its types use `@:noCompletion`/`@:noDoc`.
 
-## Calls, data, and lifetime
+## Calls and ownership
 
-1. A facade method calls its module's `load()` with a primitive name and arity. The loader prefixes names as `hx_cv_<module>_<operation>` in library `opencv`.
-2. On the first load, `src/spilehx/internal/NativeLibrary.hx` calls `hx_opencv_entry()` before `cpp.Lib.load()`. That entry allocates the kinds used to identify and validate native objects.
-3. Classes implementing `spilehx.internal.Macros.CvProcs` use `@:CvProc` to generate public static inline methods. Bodyless declarations get argument unwrapping, a native call, and return wrapping through the result type's `cvt()`. Explicit bodies handle special conversions. Generated null checks and `@:CvCheck` checks are debug-only.
-4. C++ primitives extract CFFI values, call OpenCV, and return values or update supplied destinations. `spilehx.cv.Core.Arr` aliases `NativeBinding`; image/matrix compatibility is handled by the native operation rather than a distinct Haxe array hierarchy.
+1. Facades use `NativeLibrary.load` with `hx_cv_<module>_<operation>` names and the
+   primitive arity. Counts over five use the CFFI multi-argument path.
+2. The first load calls `hx_opencv_entry()` to initialize core, feature and capture
+   kinds. Static primitive registration is retained through whole-archive linking.
+3. `@:CvProc` generates argument unwrapping and return wrapping for simple methods.
+   Sparse point/keypoint arrays use explicit Haxe/native marshalling. Generated
+   Haxe null checks are debug-only; retained native boundaries check kinds and
+   relevant array/access bounds.
+4. `CV_PRIM`/`CV_PRIM_MULT` in `cpp/utils.h` translate OpenCV exceptions to Haxe
+   errors. `core.h` supplies small typed conversions; no legacy C array bridge is
+   used.
 
-`Mat` wraps `CvMat`, and `Image` wraps `IplImage`; feature implementations bridge these to `cv::Mat` with `cv::cvarrToMat`. Algorithms often receive caller-created destination objects. Feature detection and pyramidal optical flow explicitly marshal output arrays and wrap newly added native elements; follow these manual bodies for array outputs because the macro does not generate array-return conversion.
+`NativeBinding` stores an opaque native handle. `Mat` owns a heap `cv::Mat` header
+with a typed delete finalizer. `Core.Arr` and `core.Image` are Mat typedefs. Views
+have independent headers sharing reference-counted storage; clones copy pixels.
+Destination arguments are passed by reference to the stored header so OpenCV
+allocation/type changes reach the Haxe wrapper. Optional masks/kernels use empty
+Mats. Typed component access accounts for row stride and validates depth/bounds.
 
-Owned handles use CFFI GC finalizers (`cvReleaseMat`, `cvReleaseImage`, `cvReleaseCapture`, or typed `delete`). `CONVERT_NOGC` creates a wrapper without a finalizer: examples include capture frames and `KeyPoint.pt`. These are borrowed views; preserve the owner's lifetime and do not treat them as independent allocations. `Image.raw`/`Mat.raw` expose native pixel pointers through `CVBuffer`, without copying. HighGUI roots callbacks with `AutoGCRoot` and releases window-associated roots when windows are destroyed.
+Geometry, scalars and criteria own modern cv values. Keypoint handles own copied
+`cv::KeyPoint` values; `KeyPoint.pt` returns a fresh owned `cv::Point2f`, with no
+owner rooting or borrowed coordinate view. GFFT and SIFT handles own heap `cv::Ptr`
+holders. SIFT descriptors are Mat outputs, and keypoint arrays resize exactly.
 
-## Native build and distribution
+Capture handles own `cv::VideoCapture` directly. Grab/read/retrieve and property
+methods delegate to the configured backend. Returned frames have independently
+owned cloned storage, so they survive later reads, explicit release and capture GC.
+`releaseCapture` closes the input; the finalizer deletes the handle later.
 
-- `.env` supplies vendor source, install, wrapper, and temporary paths plus the OpenCV download URL.
-- `build_vendor.sh` obtains OpenCV source, builds static archives with Qt/GTK and nonfree support, then invokes root `Build.xml` to compile the CFFI wrapper as `opencv.a`.
-- Root `Build.xml` lists wrapper translation units and include/compiler settings. `vendor/toolchain/opencv-toolchain.xml` redirects intermediate objects into the configured temporary directory.
-- `package-haxelib.sh` copies archives and the OpenCV license, derives system linker flags from `opencv.pc` via `pkg-config`, generates linker XML, refreshes `native/Linux64/`, and writes the release ZIP under `dist/`.
-- `native/Linux64/` is the distributable archive/linker bundle. Its `Build.xml` keeps wrapper registration objects with `--whole-archive` and groups OpenCV archives for symbol resolution. It is separate from the root wrapper-build XML. `vendor/`, `obj/`, `ndll/`, `build/`, and `dist/` hold development outputs rather than the consumer API.
+HighGUI stores per-window callback roots. OpenCV userdata points to an
+`AutoGCRoot`; callbacks resolve the current Haxe value with `get()`. Roots are
+released after window destruction. Trackbars use OpenCV-managed positions with a
+null integer pointer, and initialize through `setTrackbarPos`; there is no shared
+trackbar-value variable. Only ordinary windows, trackbars and mouse callbacks are
+retained.
 
-## Extending the bindings
+## Native build and packaging
 
-- Add an operation to the relevant Haxe facade and matching `cpp/<module>.cpp`. Keep primitive names and arities aligned with `DEFINE_PRIM`; multi-argument primitives use `DEFINE_PRIM_MULT` and loader arity `-1` (most facade loaders translate counts greater than five automatically).
-- For a wrapped type, follow neighboring `NativeBinding` subclasses or abstracts, including null-aware `cvt()`, native kind declarations/allocation, conversion helpers, and appropriate owned/borrowed lifetime handling.
-- A new native module also needs registration in `cpp/main.cpp` and a translation-unit entry in root `Build.xml`. Native changes require regenerating the packaged bundle; Haxe sources and archives must come from the same release.
+- `.env` pins source/install/temp paths and the OpenCV 5.1.0 URL. Existing source,
+  build cache and installation can be reused through the build script's prompts.
+- Root `Build.xml` compiles all retained translation units with C++17 and the
+  `include/opencv5` root. `vendor/toolchain/opencv-toolchain.xml` redirects wrapper
+  intermediates into the temporary directory.
+- `package-haxelib.sh` builds the wrapper, recursively collects installed `.a`
+  archives with duplicate-name rejection, and copies OpenCV/bundled licenses.
+- Generated linker XML keeps wrapper registration objects with whole-archive and
+  groups the installed archives. The pinned Linux system dependencies are listed
+  in the packaging script; pkg-config resolves Qt5 Widgets/Test/Concurrent only.
+  OpenCV `.pc` files and development-tree archive paths are not required.
+- Packaging generates `native/Linux64/` and a ZIP in `dist/`. Never review or
+  manually edit generated `native/` files. Consumer sources and archives must come
+  from the same package. Build outputs live under vendor/build/obj/ndll/dist paths.
 
-This map is based on static source/configuration inspection. Archive contents, runtime behavior, and platform/system-library compatibility were not verified; no build, application, or tests were run.
+The installed build includes Qt, V4L2/OBSENSOR and built-in image-sequence/MJPEG
+backends; FFmpeg, GStreamer and OpenGL are disabled. Hardware capture and general
+video-format support remain backend-dependent and unverified.
+
+## Validation and extension
+
+Stages exercised headless core/processing and view lifetimes, synthetic GFFT/SIFT
+and PyrLK/Farneback, plus Qt/X11 windows, keys, rooted callbacks and BetterSample.
+See the README for the final capture/package validation record.
+
+Add operations to the existing facade/native module with matching primitive names
+and arities. Reuse the typed conversions, finalizers and exception macros. New
+handle kinds require initialization in `cpp/main.cpp`; new translation units also
+need a root `Build.xml` entry. Repackage native changes before consumer validation.

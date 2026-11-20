@@ -1,721 +1,474 @@
-#include <core/core_c.h>
-#include <core/core.hpp>
+#include "core.h"
+#include <opencv2/imgproc.hpp>
+#include <vector>
 
-#include "utils.h"
-#define GETPROP(N, M, I) PGETPROP(core, N, M, I)
-#define SETPROP(N, M, I) PSETPROP(core, N, M, I)
-#define PROP(N, M, I) PPROP(core, N, M, I)
-
-
-//
-// CvPoint
-// CvPoint2D32f
-// CvPoint2D64f
-//
-#define INIT_POINT2D(N, F) \
-    DEFINE_KIND(k_##N); \
-    value hx_cv_core_##N(value x, value y) { \
-        Cv##N* ptr = new Cv##N; \
-        ptr->x = val_get<F>(x); \
-        ptr->y = val_get<F>(y); \
-        value v = alloc_abstract(k_##N, ptr); \
-        val_gc(v, finaliser<Cv##N>); \
-        return v; \
-    } \
-    DEFINE_PRIM(hx_cv_core_##N, 2); \
-    PROP(N, x, F); \
-    PROP(N, y, F); \
-    PDEFINE_CONVERT_GENERIC(core, N)
-INIT_POINT2D(Point,      int   );
-INIT_POINT2D(Point2D32f, double);
-INIT_POINT2D(Point2D64f, double);
-
-
-
-//
-// CvPoint3D32f
-// CvPoint3D64f
-//
-#define INIT_POINT3D(N) \
-    DEFINE_KIND(k_##N); \
-    value hx_cv_core_##N(value x, value y, value z) { \
-        Cv##N* ptr = new Cv##N; \
-        ptr->x = val_get<double>(x); \
-        ptr->y = val_get<double>(y); \
-        ptr->z = val_get<double>(z); \
-        value v = alloc_abstract(k_##N, ptr); \
-        val_gc(v, finaliser<Cv##N>); \
-        return v; \
-    } \
-    DEFINE_PRIM(hx_cv_core_##N, 3); \
-    PROP(N, x, double); \
-    PROP(N, y, double); \
-    PROP(N, z, double)
-
-INIT_POINT3D(Point3D32f);
-INIT_POINT3D(Point3D64f);
-
-
-
-//
-// CvSize
-// CvSize2D32f
-//
-#define INIT_SIZE2D(N, F) \
-    DEFINE_KIND(k_##N); \
-    value hx_cv_core_##N(value width, value height) { \
-        Cv##N* ptr = new Cv##N; \
-        ptr->width  = val_get<F>(width); \
-        ptr->height = val_get<F>(height); \
-        value v = alloc_abstract(k_##N, ptr); \
-        val_gc(v, finaliser<Cv##N>); \
-        return v; \
-    } \
-    DEFINE_PRIM(hx_cv_core_##N, 2); \
-    PROP(N, width,  F); \
-    PROP(N, height, F)
-
-INIT_SIZE2D(Size,      int   );
-INIT_SIZE2D(Size2D32f, double);
-
-PDEFINE_CONVERT_GENERIC(core, Size);
-value cv_Size(const CvSize& s) {
-    CvSize* ptr = new CvSize;
-    ptr->width = s.width;
-    ptr->height = s.height;
-    return CONVERT(core, Size, ptr);
-}
-
-
-
-//
-// CvRect
-//
-DEFINE_KIND(k_Rect);
-value hx_cv_core_Rect(value x, value y, value width, value height) {
-    CvRect* ptr = new CvRect;
-    ptr->x      = val_get<int>(x);
-    ptr->y      = val_get<int>(y);
-    ptr->width  = val_get<int>(width);
-    ptr->height = val_get<int>(height);
-    value v = alloc_abstract(k_Rect, ptr);
-    val_gc(v, finaliser<CvRect>);
-    return v;
-}
-DEFINE_PRIM(hx_cv_core_Rect, 4);
-PROP(Rect, x,      int);
-PROP(Rect, y,      int);
-PROP(Rect, width,  int);
-PROP(Rect, height, int);
-
-
-
-//
-// CvScalar
-//
-DEFINE_KIND(k_Scalar);
-PDEFINE_CONVERT_GENERIC(core, Scalar);
-value hx_cv_core_Scalar(value v0, value v1, value v2, value v3) {
-    CvScalar* ptr = new CvScalar;
-    ptr->val[0] = val_get<double>(v0);
-    ptr->val[1] = val_get<double>(v1);
-    ptr->val[2] = val_get<double>(v2);
-    ptr->val[3] = val_get<double>(v3);
-    return CONVERT(core, Scalar, ptr);
-}
-value cv_Scalar(const CvScalar& s) {
-    CvScalar* ptr = new CvScalar;
-    ptr->val[0] = s.val[0];
-    ptr->val[1] = s.val[1];
-    ptr->val[2] = s.val[2];
-    ptr->val[3] = s.val[3];
-    return CONVERT(core, Scalar, ptr);
-}
-value hx_cv_core_Scalar_get_i(value v, value i) {
-    val_check_kind(v, k_Scalar);
-    CvScalar* ptr = (CvScalar*)val_data(v);
-    return alloc<float>(ptr->val[val_get<int>(i)]);
-}
-value hx_cv_core_Scalar_set_i(value v, value i, value x) {
-    val_check_kind(v, k_Scalar);
-    CvScalar* ptr = (CvScalar*)val_data(v);
-    return alloc<float>(ptr->val[val_get<int>(i)] = val_get<double>(x));
-}
-DEFINE_PRIM(hx_cv_core_Scalar,       4);
-DEFINE_PRIM(hx_cv_core_Scalar_get_i, 2);
-DEFINE_PRIM(hx_cv_core_Scalar_set_i, 3);
-
-
-//
-// CvTermCriteria
-// cvCheckTermCriteria
-//
-DEFINE_KIND(k_TermCriteria);
-value hx_cv_core_TermCriteria(value type, value max_iter, value epsilon) {
-    CvTermCriteria* ptr = new CvTermCriteria;
-    ptr->type     = val_get<int>(type);
-    ptr->max_iter = val_get<int>(max_iter);
-    ptr->epsilon  = val_get<double>(epsilon);
-    value v = alloc_abstract(k_TermCriteria, ptr);
-    val_gc(v, finaliser<CvTermCriteria>);
-    return v;
-}
-value hx_cv_core_checkTermCriteria(value criteria, value default_eps, value default_max_iters) {
-    val_check_kind(criteria, k_TermCriteria);
-    CvTermCriteria* ptr = (CvTermCriteria*)val_data(criteria);
-    CvTermCriteria nxt = cvCheckTermCriteria(*ptr, val_get<double>(default_eps), val_get<int>(default_max_iters));
-    return hx_cv_core_TermCriteria(alloc<int>(nxt.type), alloc<int>(nxt.max_iter), alloc<double>(nxt.epsilon));
-}
-DEFINE_PRIM(hx_cv_core_TermCriteria,      3);
-DEFINE_PRIM(hx_cv_core_checkTermCriteria, 3);
-PROP(TermCriteria, type, int);
-PROP(TermCriteria, max_iter, int);
-PROP(TermCriteria, epsilon, double);
-
-
-
-//
-// CvMat
-// cvCreateMat
-// cvCreateMatHeader
-// cvmGet
-// cvmSet
-//
 DEFINE_KIND(k_Mat);
-static void finalise_Mat(value v) {
-    CvMat* ptr = (CvMat*)val_data(v);
-    cvReleaseMat(&ptr);
+
+cv::Mat& hx_cv_core_mat(value handle) {
+    val_check_kind(handle, k_Mat);
+    return *static_cast<cv::Mat*>(val_data(handle));
 }
-PDEFINE_CONVERT(core, Mat, finalise_Mat);
+
+value hx_cv_core_toMat(cv::Mat* matrix) {
+    value handle = alloc_abstract(k_Mat, matrix);
+    val_gc(handle, finaliser<cv::Mat>);
+    return handle;
+}
+
 value hx_cv_core_createMat(value rows, value cols, value type) {
-    return CONVERT(core, Mat, cvCreateMat(val_get<int>(rows), val_get<int>(cols), val_get<int>(type)));
+    try {
+        int rowCount = val_get_int(rows);
+        int columnCount = val_get_int(cols);
+        CV_Assert(rowCount >= 0 && columnCount >= 0);
+        return hx_cv_core_toMat(new cv::Mat(rowCount, columnCount, val_get_int(type)));
+    } CV_CATCH_ERROR
 }
-value hx_cv_core_createMatHeader(value rows, value cols, value type) {
-    return CONVERT(core, Mat, cvCreateMatHeader(val_get<int>(rows), val_get<int>(cols), val_get<int>(type)));
+DEFINE_PRIM(hx_cv_core_createMat, 3);
+
+value hx_cv_core_cloneMat(value handle) {
+    try {
+        return hx_cv_core_toMat(new cv::Mat(hx_cv_core_mat(handle).clone()));
+    } CV_CATCH_ERROR
 }
-value hx_cv_core_cloneMat(value mat) {
-    val_check_kind(mat, k_Mat);
-    return CONVERT(core, Mat, cvCloneMat((CvMat*)val_data(mat)));
+DEFINE_PRIM(hx_cv_core_cloneMat, 1);
+
+// Scalar access initially supports single-channel floating-point matrices.
+value hx_cv_core_mGet(value handle, value row, value col) {
+    try {
+        cv::Mat& matrix = hx_cv_core_mat(handle);
+        int r = val_get_int(row);
+        int c = val_get_int(col);
+        CV_Assert(matrix.channels() == 1 && r >= 0 && r < matrix.rows && c >= 0 && c < matrix.cols);
+        CV_Assert(matrix.depth() == CV_32F || matrix.depth() == CV_64F);
+        return alloc_float(matrix.depth() == CV_32F ? matrix.at<float>(r, c) : matrix.at<double>(r, c));
+    } CV_CATCH_ERROR
 }
-value hx_cv_core_mGet(value mat, value row, value col) {
-    val_check_kind(mat, k_Mat);
-    CvMat* ptr = (CvMat*)val_data(mat);
-    return alloc<double>(cvmGet(ptr, val_get<int>(row), val_get<int>(col)));
+DEFINE_PRIM(hx_cv_core_mGet, 3);
+
+value hx_cv_core_mSet(value handle, value row, value col, value number) {
+    try {
+        cv::Mat& matrix = hx_cv_core_mat(handle);
+        int r = val_get_int(row);
+        int c = val_get_int(col);
+        CV_Assert(matrix.channels() == 1 && r >= 0 && r < matrix.rows && c >= 0 && c < matrix.cols);
+        CV_Assert(matrix.depth() == CV_32F || matrix.depth() == CV_64F);
+        if (matrix.depth() == CV_32F) matrix.at<float>(r, c) = val_get_double(number);
+        else matrix.at<double>(r, c) = val_get_double(number);
+        return number;
+    } CV_CATCH_ERROR
 }
-value hx_cv_core_mSet(value mat, value row, value col, value value) {
-    val_check_kind(mat, k_Mat);
-    CvMat* ptr = (CvMat*)val_data(mat);
-    cvmSet(ptr, val_get<int>(row), val_get<int>(col), val_get<double>(value));
-    return value;
-}
-#define MATVAL(N, P, F) \
-    value hx_cv_core_mat_##N##_get(value mat, value i) { \
-        val_check_kind(mat, k_Mat); \
-        CvMat* ptr = (CvMat*)val_data(mat); \
-        return alloc<F>(ptr->data.P[val_get<int>(i)]); \
+DEFINE_PRIM(hx_cv_core_mSet, 4);
+
+#define MAT_PROPERTY(name, expression) \
+    value hx_cv_core_Mat_get_##name(value handle) { \
+        try { \
+            cv::Mat& matrix = hx_cv_core_mat(handle); \
+            return alloc_int(expression); \
+        } CV_CATCH_ERROR \
     } \
-    value hx_cv_core_mat_##N##_set(value mat, value i, value v) { \
-        val_check_kind(mat, k_Mat); \
-        CvMat* ptr = (CvMat*)val_data(mat); \
-        return alloc<F>(ptr->data.P[val_get<int>(i)] = val_get<F>(v)); \
+    DEFINE_PRIM(hx_cv_core_Mat_get_##name, 1)
+
+MAT_PROPERTY(rows, matrix.rows);
+MAT_PROPERTY(cols, matrix.cols);
+MAT_PROPERTY(type, matrix.type());
+MAT_PROPERTY(step, static_cast<int>(matrix.step[0]));
+MAT_PROPERTY(depth, matrix.depth());
+MAT_PROPERTY(channels, matrix.channels());
+
+
+cv::Mat hx_cv_core_optionalMat(value handle) {
+    return val_is_null(handle) ? cv::Mat() : hx_cv_core_mat(handle);
+}
+
+#define CORE_DEFINE_TYPE(name, type) \
+    DEFINE_KIND(k_##name); \
+    type& hx_cv_core_as##name(value handle) { \
+        val_check_kind(handle, k_##name); \
+        return *static_cast<type*>(val_data(handle)); \
     } \
-    DEFINE_PRIM(hx_cv_core_mat_##N##_get, 2); \
-    DEFINE_PRIM(hx_cv_core_mat_##N##_set, 3)
-DEFINE_PRIM(hx_cv_core_createMat,       3);
-DEFINE_PRIM(hx_cv_core_createMatHeader, 3);
-DEFINE_PRIM(hx_cv_core_cloneMat,        1);
-DEFINE_PRIM(hx_cv_core_mGet,            3);
-DEFINE_PRIM(hx_cv_core_mSet,            4);
-GETPROP(Mat, type, int);
-GETPROP(Mat, step, int);
-GETPROP(Mat, rows, int);
-GETPROP(Mat, cols, int);
-MATVAL(uchar,  ptr, int   );
-MATVAL(short,  s,   int   );
-MATVAL(int,    i,   int   );
-MATVAL(float,  fl,  double);
-MATVAL(double, db,  double);
+    value hx_cv_core_to##name(type* object) { \
+        value handle = alloc_abstract(k_##name, object); \
+        val_gc(handle, finaliser<type>); \
+        return handle; \
+    }
 
-DECLARE_KIND(k_CArray);
-DEFINE_KIND(k_CArray);
+#define CORE_PROPERTY(name, field, getter, setter) \
+    CV_PRIM(core, name##_get_##field, 1, (value handle), \
+        return getter(hx_cv_core_as##name(handle).field); \
+    ); \
+    CV_PRIM(core, name##_set_##field, 2, (value handle, value number), \
+        return getter(hx_cv_core_as##name(handle).field = setter(number)); \
+    )
 
-value hx_cv_core_Mat_get_ptr(value image) {
-    CvMat* ptr = (CvMat*)val_data(image);
-    value ret = alloc_abstract(k_CArray, ptr->data.ptr);
-    return ret;
-}
-DEFINE_PRIM(hx_cv_core_Mat_get_ptr, 1);
+CORE_DEFINE_TYPE(Point, cv::Point);
+CV_PRIM(core, Point, 2, (value x, value y),
+    return hx_cv_core_toPoint(new cv::Point(val_get_int(x), val_get_int(y)));
+);
+CORE_PROPERTY(Point, x, alloc_int, val_get_int);
+CORE_PROPERTY(Point, y, alloc_int, val_get_int);
 
+CORE_DEFINE_TYPE(Point2D32f, cv::Point2f);
+CV_PRIM(core, Point2D32f, 2, (value x, value y),
+    return hx_cv_core_toPoint2D32f(new cv::Point2f(val_get_double(x), val_get_double(y)));
+);
+CORE_PROPERTY(Point2D32f, x, alloc_float, val_get_double);
+CORE_PROPERTY(Point2D32f, y, alloc_float, val_get_double);
 
-struct Vector {
-    void* dat;
-    unsigned int size;
-};
-value hx_gl_vector_len(value b) {
-    Vector* v = (Vector*)val_data(b);
-    return alloc<int>(v->size);
-}
-DEFINE_PRIM(hx_gl_vector_len, 1)
+CORE_DEFINE_TYPE(Point2D64f, cv::Point2d);
+CV_PRIM(core, Point2D64f, 2, (value x, value y),
+    return hx_cv_core_toPoint2D64f(new cv::Point2d(val_get_double(x), val_get_double(y)));
+);
+CORE_PROPERTY(Point2D64f, x, alloc_float, val_get_double);
+CORE_PROPERTY(Point2D64f, y, alloc_float, val_get_double);
 
-DECLARE_KIND(k_Vector);
-DEFINE_KIND(k_Vector);
+CORE_DEFINE_TYPE(Point3D32f, cv::Point3f);
+CV_PRIM(core, Point3D32f, 3, (value x, value y, value z),
+    return hx_cv_core_toPoint3D32f(new cv::Point3f(val_get_double(x), val_get_double(y), val_get_double(z)));
+);
+CORE_PROPERTY(Point3D32f, x, alloc_float, val_get_double);
+CORE_PROPERTY(Point3D32f, y, alloc_float, val_get_double);
+CORE_PROPERTY(Point3D32f, z, alloc_float, val_get_double);
 
+CORE_DEFINE_TYPE(Point3D64f, cv::Point3d);
+CV_PRIM(core, Point3D64f, 3, (value x, value y, value z),
+    return hx_cv_core_toPoint3D64f(new cv::Point3d(val_get_double(x), val_get_double(y), val_get_double(z)));
+);
+CORE_PROPERTY(Point3D64f, x, alloc_float, val_get_double);
+CORE_PROPERTY(Point3D64f, y, alloc_float, val_get_double);
+CORE_PROPERTY(Point3D64f, z, alloc_float, val_get_double);
 
+CORE_DEFINE_TYPE(Size, cv::Size);
+CV_PRIM(core, Size, 2, (value width, value height),
+    return hx_cv_core_toSize(new cv::Size(val_get_int(width), val_get_int(height)));
+);
+CORE_PROPERTY(Size, width, alloc_int, val_get_int);
+CORE_PROPERTY(Size, height, alloc_int, val_get_int);
 
-// For ogl
-value hx_cv_core_Mat_get_raw(value image) {
-    val_check_kind(image, k_Mat);
-    CvMat* ptr = (CvMat*)val_data(image);
-    int size = ptr->rows*ptr->step;
-    Vector* ret = new Vector;
-    ret->dat = ptr->data.ptr;
-    ret->size = size;
-    value v = alloc_abstract(k_Vector, ret);
-    return v;
-}
-DEFINE_PRIM(hx_cv_core_Mat_get_raw, 1);
+CORE_DEFINE_TYPE(Size2D32f, cv::Size2f);
+CV_PRIM(core, Size2D32f, 2, (value width, value height),
+    return hx_cv_core_toSize2D32f(new cv::Size2f(val_get_double(width), val_get_double(height)));
+);
+CORE_PROPERTY(Size2D32f, width, alloc_float, val_get_double);
+CORE_PROPERTY(Size2D32f, height, alloc_float, val_get_double);
 
+CORE_DEFINE_TYPE(Rect, cv::Rect);
+CV_PRIM(core, Rect, 4, (value x, value y, value width, value height),
+    return hx_cv_core_toRect(new cv::Rect(val_get_int(x), val_get_int(y), val_get_int(width), val_get_int(height)));
+);
+CORE_PROPERTY(Rect, x, alloc_int, val_get_int);
+CORE_PROPERTY(Rect, y, alloc_int, val_get_int);
+CORE_PROPERTY(Rect, width, alloc_int, val_get_int);
+CORE_PROPERTY(Rect, height, alloc_int, val_get_int);
 
+CORE_DEFINE_TYPE(Scalar, cv::Scalar);
 
-//
-// IplImage
-// cvCreateImage
-// cvCreateImageHeader
-// cvCloneImage
-//
-DEFINE_KIND(k_Image);
-static void finalise_Image(value v) {
-    IplImage* ptr = (IplImage*)val_data(v);
-    cvReleaseImage(&ptr);
-}
-GDEFINE_CONVERT(Ipl, core, Image, finalise_Image);
-value hx_cv_core_createImage(value size, value depth, value channels) {
-    val_check_kind(size, k_Size);
-    return CONVERT(core, Image, cvCreateImage(*(CvSize*)val_data(size), val_get<int>(depth), val_get<int>(channels)));
-}
-value hx_cv_core_createImageHeader(value size, value depth, value channels) {
-    val_check_kind(size, k_Size);
-    return CONVERT(core, Image, cvCreateImageHeader(*(CvSize*)val_data(size), val_get<int>(depth), val_get<int>(channels)));
-}
-value hx_cv_core_cloneImage(value image) {
-    val_check_kind(image, k_Image);
-    return CONVERT(core, Image, cvCloneImage((IplImage*)val_data(image)));
-}
-DEFINE_PRIM(hx_cv_core_createImage,       3);
-DEFINE_PRIM(hx_cv_core_createImageHeader, 3);
-DEFINE_PRIM(hx_cv_core_cloneImage,        1);
-GGETPROP(core, Ipl, Image, nChannels, int);
-GGETPROP(core, Ipl, Image, depth,     int);
-GGETPROP(core, Ipl, Image, dataOrder, int);
-GGETPROP(core, Ipl, Image, origin,    int);
-GGETPROP(core, Ipl, Image, width,     int);
-GGETPROP(core, Ipl, Image, height,    int);
-GGETPROP(core, Ipl, Image, imageSize, int);
-GGETPROP(core, Ipl, Image, widthStep, int);
+CORE_DEFINE_TYPE(TermCriteria, cv::TermCriteria);
 
-// For ogl
-value hx_cv_core_Image_get_raw(value image) {
-    val_check_kind(image, k_Image);
-    IplImage* ptr = (IplImage*)val_data(image);
-    int size = ptr->imageSize;
-    Vector* ret = new Vector;
-    ret->dat = ptr->imageData;
-    ret->size = size;
-    value v = alloc_abstract(k_Vector, ret);
-    return v;
-}
-DEFINE_PRIM(hx_cv_core_Image_get_raw, 1);
+CV_PRIM(core, Scalar, 4, (value x, value y, value z, value w),
+    return hx_cv_core_toScalar(new cv::Scalar(val_get_double(x), val_get_double(y), val_get_double(z), val_get_double(w)));
+);
+CV_PRIM(core, Scalar_get_i, 2, (value handle, value index),
+    int i = val_get_int(index);
+    CV_Assert(i >= 0 && i < 4);
+    return alloc_float(hx_cv_core_asScalar(handle)[i]);
+);
+CV_PRIM(core, Scalar_set_i, 3, (value handle, value index, value number),
+    int i = val_get_int(index);
+    CV_Assert(i >= 0 && i < 4);
+    return alloc_float(hx_cv_core_asScalar(handle)[i] = val_get_double(number));
+);
+CV_PRIM(core, TermCriteria, 3, (value type, value maxCount, value epsilon),
+    return hx_cv_core_toTermCriteria(new cv::TermCriteria(val_get_int(type), val_get_int(maxCount), val_get_double(epsilon)));
+);
+CORE_PROPERTY(TermCriteria, type, alloc_int, val_get_int);
+CORE_PROPERTY(TermCriteria, maxCount, alloc_int, val_get_int);
+CORE_PROPERTY(TermCriteria, epsilon, alloc_float, val_get_double);
 
-
-//
-// cvAbsDiff
-// cvAbsDiffS
-// cvAdd
-// cvAddS
-// cvAddWeighted
-// cvAnd
-// cvAndS
-// cvAvg
-// cvAvgSdv
-// cvCartToPolar
-// cvCmp
-// cvCmpS
-// cvConvertScale
-// cvConvertScaleAbs
-// cvCopy
-// cvCountNonZero
-// cvCreateData
-// cvDCT
-// cvDFT
-// cvDet
-// cvDiv
-// cvDotProduct
-// cvGet1D
-// cvGet2D
-// cvGet3D
-// cvGetND
-// cvGetCols
-// cvGetDiag
-// cvGetElemType
-// cvGetReal1D
-// cvGetReal2D
-// cvGetReal3D
-// cvGetRealND
-// cvGetRows
-// cvGetSize
-// cvGetSubRect
-// cvMul
-// cvScaleAdd
-// cvSet
-//
-value hx_cv_core_absDiff(value src1, value src2, value dst) {
-    cvAbsDiff(val_data(src1), val_data(src2), val_data(dst));
-    return val_null;
-}
-value hx_cv_core_absDiffS(value src, value _value, value dst) {
-    val_check_kind(_value, k_Scalar);
-    cvAbsDiffS(val_data(src), val_data(dst), *(CvScalar*)val_data(_value));
-    return val_null;
-}
-value hx_cv_core_add(value src1, value src2, value dst, value mask) {
-    cvAdd(val_data(src1), val_data(src2), val_data(dst), val_data(mask));
-    return val_null;
-}
-value hx_cv_core_addS(value src, value _value, value dst, value mask) {
-    val_check_kind(_value, k_Scalar);
-    cvAddS(val_data(src), *(CvScalar*)val_data(_value), val_data(dst), val_data(mask));
-    return val_null;
-}
-value hx_cv_core_addWeighted(value* args, int nargs) {
-    if (nargs != 6) hx_error();
-    value src1  = args[0];
-    value alpha = args[1];
-    value src2  = args[2];
-    value beta  = args[3];
-    value gamma = args[4];
-    value dst   = args[5];
-
-    cvAddWeighted(val_data(src1), val_get<double>(alpha), val_data(src2), val_get<double>(beta), val_get<double>(gamma), val_data(dst));
-    return val_null;
-}
-value hx_cv_core_and(value src1, value src2, value dst, value mask) {
-    cvAnd(val_data(src1), val_data(src1), val_data(dst), val_data(mask));
-    return val_null;
-}
-value hx_cv_core_andS(value src, value _value, value dst, value mask) {
-    val_check_kind(_value, k_Scalar);
-    cvAndS(val_data(src), *(CvScalar*)val_data(_value), val_data(dst), val_data(mask));
-    return val_null;
-}
-value hx_cv_core_avg(value arr, value mask) {
-    return cv_Scalar(cvAvg(val_data(arr), val_data(mask)));
-}
-value hx_cv_core_avgSdv(value arr, value mean, value stdDev, value mask) {
-    val_check_kind(mean, k_Scalar);
-    val_check_kind(stdDev, k_Scalar);
-    cvAvgSdv(val_data(arr), (CvScalar*)val_data(mean), (CvScalar*)val_data(stdDev), val_data(mask));
-    return val_null;
-}
-value hx_cv_core_cartToPolar(value x, value y, value magnitude, value angle, value angleInDegrees) {
-    cvCartToPolar(val_data(x), val_data(y), val_data(magnitude), val_data(angle), val_get<bool>(angleInDegrees));
-    return val_null;
-}
-value hx_cv_core_cmp(value src1, value src2, value dst, value cmpOp) {
-    cvCmp(val_data(src1), val_data(src2), val_data(dst), val_get<int>(cmpOp));
-    return val_null;
-}
-value hx_cv_core_cmpS(value src, value _value, value dst, value cmpOp) {
-    cvCmpS(val_data(src), val_get<double>(_value), val_data(dst), val_get<int>(cmpOp));
-    return val_null;
-}
-value hx_cv_core_convertScale(value src, value dst, value scale, value shift) {
-    cvConvertScale(val_data(src), val_data(dst), val_get<double>(scale), val_get<double>(shift));
-    return val_null;
-}
-value hx_cv_core_convertScaleAbs(value src, value dst, value scale, value shift) {
-    cvConvertScaleAbs(val_data(src), val_data(dst), val_get<double>(scale), val_get<double>(shift));
-    return val_null;
-}
-value hx_cv_core_copy(value src, value dst, value mask) {
-    cvCopy(val_data(src), val_data(dst), val_data(mask));
-    return val_null;
-}
-value hx_cv_core_countNonZero(value arr) {
-    return alloc<int>(cvCountNonZero(val_data(arr)));
-}
-value hx_cv_core_createData(value arr)  {
-    cvCreateData(val_data(arr));
-    return val_null;
-}
-value hx_cv_core_DCT(value src, value dst, value flags) {
-    cvDCT(val_data(src), val_data(dst), val_get<int>(flags));
-    return val_null;
-}
-value hx_cv_core_DFT(value src, value dst, value flags, value nonzeroRows) {
-    cvDFT(val_data(src), val_data(dst), val_get<int>(flags), val_get<int>(nonzeroRows));
-    return val_null;
-}
-value hx_cv_core_det(value mat) {
-    return alloc<double>(cvDet(val_data(mat)));
-}
-value hx_cv_core_div(value src1, value src2, value dst, value scale) {
-    cvDiv(val_data(src1), val_data(src1), val_data(dst), val_get<double>(scale));
-    return val_null;
-}
-value hx_cv_core_dotProduct(value src1, value src2) {
-    return alloc<double>(cvDotProduct(val_data(src1), val_data(src2)));
-}
-value hx_cv_core_get1D(value arr, value idx0) {
-    return cv_Scalar(cvGet1D(val_data(arr), val_get<int>(idx0)));
-}
-value hx_cv_core_get2D(value arr, value idx0, value idx1) {
-    return cv_Scalar(cvGet2D(val_data(arr), val_get<int>(idx0), val_get<int>(idx1)));
-}
-value hx_cv_core_get3D(value arr, value idx0, value idx1, value idx2) {
-    return cv_Scalar(cvGet3D(val_data(arr), val_get<int>(idx0), val_get<int>(idx1), val_get<int>(idx2)));
-}
-value hx_cv_core_getND(value arr, value idx) {
-    val_check(idx, array);
-    int size = val_array_size(idx);
-    int* _idx = new int[size];
-    for (int i = 0; i < size; i++) _idx[i] = val_get<int>(val_array_i(idx, i));
-    value ret = cv_Scalar(cvGetND(val_data(arr), _idx));
-    delete[] _idx;
-    return ret;
-}
-value hx_cv_core_getCols(value arr, value submat, value startCol, value endCol) {
-    val_check_kind(submat, k_Mat);
-    return CONVERT(core, Mat, cvGetCols(val_data(arr), (CvMat*)val_data(submat), val_get<int>(startCol), val_get<int>(endCol)));
-}
-value hx_cv_core_getDiag(value arr, value submat, value diag) {
-    val_check_kind(submat, k_Mat);
-    return CONVERT(core, Mat, cvGetDiag(val_data(arr), (CvMat*)val_data(submat), val_get<int>(diag)));
-}
-value hx_cv_core_getElemType(value arr) {
-    return alloc<int>(cvGetElemType(val_data(arr)));
-}
-value hx_cv_core_getReal1D(value arr, value idx0) {
-    return alloc<double>(cvGetReal1D(val_data(arr), val_get<int>(idx0)));
-}
-value hx_cv_core_getReal2D(value arr, value idx0, value idx1) {
-    return alloc<double>(cvGetReal2D(val_data(arr), val_get<int>(idx0), val_get<int>(idx1)));
-}
-value hx_cv_core_getReal3D(value arr, value idx0, value idx1, value idx2) {
-    return alloc<double>(cvGetReal3D(val_data(arr), val_get<int>(idx0), val_get<int>(idx1), val_get<int>(idx2)));
-}
-value hx_cv_core_getRealND(value arr, value idx) {
-    val_check(idx, array);
-    int size = val_array_size(idx);
-    int* _idx = new int[size];
-    for (int i = 0; i < size; i++) _idx[i] = val_get<int>(val_array_i(idx, i));
-    value ret = alloc<double>(cvGetRealND(val_data(arr), _idx));
-    delete[] _idx;
-    return ret;
-}
-value hx_cv_core_getRows(value arr, value submat, value startRow, value endRow, value deltaRow) {
-    val_check_kind(submat, k_Mat);
-    return CONVERT(core, Mat, cvGetRows(val_data(arr), (CvMat*)val_data(submat), val_get<int>(startRow), val_get<int>(endRow), val_get<int>(deltaRow)));
-}
-value hx_cv_core_getSize(value arr) {
-    return cv_Size(cvGetSize(val_data(arr)));
-}
-value hx_cv_core_getSubRect(value arr, value submat, value rect) {
-    val_check_kind(submat, k_Mat);
-    val_check_kind(rect, k_Rect);
-    return CONVERT_NOGC(core, Mat, cvGetSubRect(val_data(arr), (CvMat*)val_data(submat), *(CvRect*)val_data(rect)));
+// Linear component indices address logical rows, including for non-contiguous views.
+template <typename T>
+static T& matrixComponent(cv::Mat& matrix, int index, int depth) {
+    CV_Assert(matrix.dims == 2 && matrix.depth() == depth);
+    CV_Assert(index >= 0 && static_cast<size_t>(index) < matrix.total() * matrix.channels());
+    size_t rowWidth = static_cast<size_t>(matrix.cols) * matrix.channels();
+    return matrix.ptr<T>(index / rowWidth)[index % rowWidth];
 }
 
-value hx_cv_core_magnitude(value x, value y, value mag) {
-    cv::magnitude(cv::cvarrToMat(val_data(x)), cv::cvarrToMat(y), cv::cvarrToMat(mag));
-    return val_null;
-}
-value hx_cv_core_merge(value mv, value dst) {
-    CvArr* d = val_data(dst);
-    int cnt = val_array_size(mv);
-    CvArr* x = 0 >= cnt ? NULL : val_data(val_array_i(mv, 0));
-    CvArr* y = 1 >= cnt ? NULL : val_data(val_array_i(mv, 1));
-    CvArr* z = 2 >= cnt ? NULL : val_data(val_array_i(mv, 2));
-    CvArr* w = 3 >= cnt ? NULL : val_data(val_array_i(mv, 3));
-    cvMerge(x, y, z, w, d);
-    return val_null;
-}
-value hx_cv_core_mul(value src1, value src2, value dst, value scale) {
-    cvMul(val_data(src1), val_data(src2), val_data(dst), val_get<double>(scale));
-    return val_null;
-}
-value hx_cv_core_phase(value x, value y, value angle, value deg) {
-    cv::phase(cv::cvarrToMat(val_data(x)), cv::cvarrToMat(val_data(y)), cv::cvarrToMat(val_data(angle)), val_get<bool>(deg));
-    return val_null;
-}
-value hx_cv_core_polarToCart(value mag, value phase, value x, value y, value angleInDegrees) {
-    cvPolarToCart(val_data(mag), val_data(phase), val_data(x), val_data(y), val_get<bool>(angleInDegrees));
-    return val_null;
-}
-value hx_cv_core_scaleAdd(value src1, value scale, value src2, value dst) {
-    val_check_kind(scale, k_Scalar);
-    cvScaleAdd(val_data(src1), *(CvScalar*)val_data(scale), val_data(src2), val_data(dst));
-    return val_null;
-}
-value hx_cv_core_set(value arr, value _value, value mask) {
-    val_check_kind(_value, k_Scalar);
-    cvSet(val_data(arr), *(CvScalar*)val_data(_value), val_data(mask));
-    return val_null;
-}
-value hx_cv_core_split(value src, value mv) {
-    CvArr* s = val_data(src);
-    int cnt = val_array_size(mv);
-    CvArr* x = 0 >= cnt ? NULL : val_data(val_array_i(mv, 0));
-    CvArr* y = 1 >= cnt ? NULL : val_data(val_array_i(mv, 1));
-    CvArr* z = 2 >= cnt ? NULL : val_data(val_array_i(mv, 2));
-    CvArr* w = 3 >= cnt ? NULL : val_data(val_array_i(mv, 3));
-    cvSplit(s, x, y, z, w);
-    return val_null;
-}
-value hx_cv_core_sub(value src1, value src2, value dst, value mask) {
-    cvSub(val_data(src1), val_data(src2), val_data(dst), val_data(mask));
-    return val_null;
-}
-DEFINE_PRIM(hx_cv_core_absDiff,         3);
-DEFINE_PRIM(hx_cv_core_absDiffS,        3);
-DEFINE_PRIM(hx_cv_core_add,             4);
-DEFINE_PRIM(hx_cv_core_addS,            4);
-DEFINE_PRIM_MULT(hx_cv_core_addWeighted);
-DEFINE_PRIM(hx_cv_core_and,             4);
-DEFINE_PRIM(hx_cv_core_andS,            4);
-DEFINE_PRIM(hx_cv_core_avg,             2);
-DEFINE_PRIM(hx_cv_core_avgSdv,          4);
-DEFINE_PRIM(hx_cv_core_cartToPolar,     5);
-DEFINE_PRIM(hx_cv_core_cmp,             4);
-DEFINE_PRIM(hx_cv_core_cmpS,            4);
-DEFINE_PRIM(hx_cv_core_convertScale,    4);
-DEFINE_PRIM(hx_cv_core_convertScaleAbs, 4);
-DEFINE_PRIM(hx_cv_core_copy,            3);
-DEFINE_PRIM(hx_cv_core_countNonZero,    1);
-DEFINE_PRIM(hx_cv_core_createData,      1);
-DEFINE_PRIM(hx_cv_core_DCT,             3);
-DEFINE_PRIM(hx_cv_core_DFT,             4);
-DEFINE_PRIM(hx_cv_core_det,             1);
-DEFINE_PRIM(hx_cv_core_div,             4);
-DEFINE_PRIM(hx_cv_core_dotProduct,      2);
-DEFINE_PRIM(hx_cv_core_get1D,           2);
-DEFINE_PRIM(hx_cv_core_get2D,           3);
-DEFINE_PRIM(hx_cv_core_get3D,           4);
-DEFINE_PRIM(hx_cv_core_getND,           2);
-DEFINE_PRIM(hx_cv_core_getCols,         4);
-DEFINE_PRIM(hx_cv_core_getDiag,         3);
-DEFINE_PRIM(hx_cv_core_getElemType,     1);
-DEFINE_PRIM(hx_cv_core_getReal1D,       2);
-DEFINE_PRIM(hx_cv_core_getReal2D,       3);
-DEFINE_PRIM(hx_cv_core_getReal3D,       4);
-DEFINE_PRIM(hx_cv_core_getRealND,       2);
-DEFINE_PRIM(hx_cv_core_getRows,         5);
-DEFINE_PRIM(hx_cv_core_getSize,         1);
-DEFINE_PRIM(hx_cv_core_getSubRect,      3);
-DEFINE_PRIM(hx_cv_core_magnitude,       3);
-DEFINE_PRIM(hx_cv_core_merge,           2);
-DEFINE_PRIM(hx_cv_core_mul,             4);
-DEFINE_PRIM(hx_cv_core_phase,           4);
-DEFINE_PRIM(hx_cv_core_polarToCart,     5);
-DEFINE_PRIM(hx_cv_core_scaleAdd,        4);
-DEFINE_PRIM(hx_cv_core_set,             3);
-DEFINE_PRIM(hx_cv_core_split,           2);
-DEFINE_PRIM(hx_cv_core_sub,             4);
+#define MAT_ACCESS(name, type, depth, getter, setter) \
+    CV_PRIM(core, mat_##name##_get, 2, (value handle, value index), \
+        return getter(matrixComponent<type>(hx_cv_core_mat(handle), val_get_int(index), depth)); \
+    ); \
+    CV_PRIM(core, mat_##name##_set, 3, (value handle, value index, value number), \
+        return getter(matrixComponent<type>(hx_cv_core_mat(handle), val_get_int(index), depth) = static_cast<type>(setter(number))); \
+    )
 
+MAT_ACCESS(uchar, uchar, CV_8U, alloc_int, val_get_int);
+MAT_ACCESS(char, signed char, CV_8S, alloc_int, val_get_int);
+MAT_ACCESS(ushort, unsigned short, CV_16U, alloc_int, val_get_int);
+MAT_ACCESS(short, short, CV_16S, alloc_int, val_get_int);
+MAT_ACCESS(int, int, CV_32S, alloc_int, val_get_int);
+MAT_ACCESS(float, float, CV_32F, alloc_float, val_get_double);
+MAT_ACCESS(double, double, CV_64F, alloc_float, val_get_double);
 
+// Indexing converts the retained numeric depths to doubles without assuming continuity.
+static cv::Scalar matrixElement(cv::Mat& matrix, const std::vector<int>& indices) {
+    CV_Assert(static_cast<int>(indices.size()) == matrix.dims && matrix.channels() <= 4);
+    for (int d = 0; d < matrix.dims; ++d) CV_Assert(indices[d] >= 0 && indices[d] < matrix.size[d]);
+    const uchar* data = matrix.ptr(indices.data());
+    cv::Scalar result;
+    for (int channel = 0; channel < matrix.channels(); ++channel) {
+        switch (matrix.depth()) {
+            case CV_8U: result[channel] = data[channel]; break;
+            case CV_8S: result[channel] = reinterpret_cast<const signed char*>(data)[channel]; break;
+            case CV_16U: result[channel] = reinterpret_cast<const unsigned short*>(data)[channel]; break;
+            case CV_16S: result[channel] = reinterpret_cast<const short*>(data)[channel]; break;
+            case CV_32S: result[channel] = reinterpret_cast<const int*>(data)[channel]; break;
+            case CV_32F: result[channel] = reinterpret_cast<const float*>(data)[channel]; break;
+            case CV_64F: result[channel] = reinterpret_cast<const double*>(data)[channel]; break;
+            default: CV_Error(cv::Error::StsUnsupportedFormat, "Unsupported matrix indexing depth");
+        }
+    }
+    return result;
+}
 
-// cvCircle
-// cvLine
-// cvCreateFont /* derived from cvInitFont */
-// cvPutText
-//
-DECLARE_KIND(k_Font);
-DEFINE_KIND(k_Font);
-value hx_cv_core_circle(value* args, int nargs) {
-    if (nargs != 7) hx_error();
-    value img       = args[0];
-    value center    = args[1];
-    value radius    = args[2];
-    value color     = args[3];
-    value thickness = args[4];
-    value lineType  = args[5];
-    value shift     = args[6];
-    val_check_kind(center, k_Point);
-    val_check_kind(color, k_Scalar);
-    cvCircle(val_data(img), *(CvPoint*)val_data(center), val_get<int>(radius), *(CvScalar*)val_data(color), val_get<int>(thickness), val_get<int>(lineType), val_get<int>(shift));
-    return val_null;
+static std::vector<int> linearIndices(cv::Mat& matrix, int index) {
+    CV_Assert(index >= 0 && static_cast<size_t>(index) < matrix.total());
+    std::vector<int> indices(matrix.dims);
+    for (int d = matrix.dims - 1; d >= 0; --d) {
+        indices[d] = index % matrix.size[d];
+        index /= matrix.size[d];
+    }
+    return indices;
 }
-value hx_cv_core_line(value* args, int nargs) {
-    if (nargs != 7) hx_error();
-    value img       = args[0];
-    value pt1       = args[1];
-    value pt2       = args[2];
-    value color     = args[3];
-    value thickness = args[4];
-    value lineType  = args[5];
-    value shift     = args[6];
-    val_check_kind(pt1, k_Point);
-    val_check_kind(pt2, k_Point);
-    val_check_kind(color, k_Scalar);
-    cvLine(val_data(img), *(CvPoint*)val_data(pt1), *(CvPoint*)val_data(pt2), *(CvScalar*)val_data(color), val_get<int>(thickness), val_get<int>(lineType), val_get<int>(shift));
-    return val_null;
-}
-value hx_cv_core_rectangle(value* args, int nargs) {
-    if (nargs != 7) hx_error();
-    value img       = args[0];
-    value pt1       = args[1];
-    value pt2       = args[2];
-    value color     = args[3];
-    value thickness = args[4];
-    value lineType  = args[5];
-    value shift     = args[6];
-    val_check_kind(pt1, k_Point);
-    val_check_kind(pt2, k_Point);
-    val_check_kind(color, k_Scalar);
-    cvRectangle(val_data(img), *(CvPoint*)val_data(pt1), *(CvPoint*)val_data(pt2), *(CvScalar*)val_data(color), val_get<int>(thickness), val_get<int>(lineType), val_get<int>(shift));
-    return val_null;
-}
-value hx_cv_core_createFont(value* args, int nargs) {
-    if (nargs != 6) hx_error();
-    value fontFace  = args[0];
-    value hscale    = args[1];
-    value vscale    = args[2];
-    value shear     = args[3];
-    value thickness = args[4];
-    value lineType  = args[5];
-    CvFont* ptr = new CvFont;
-    cvInitFont(ptr, val_get<int>(fontFace), val_get<double>(hscale), val_get<double>(vscale), val_get<double>(shear), val_get<double>(thickness), val_get<int>(lineType));
-    value v = alloc_abstract(k_Font, ptr);
-    val_gc(v, finaliser<CvFont>);
-    return v;
-}
-value hx_cv_core_putText(value img, value text, value org, value font, value color) {
-    val_check_kind(org, k_Point);
-    val_check_kind(font, k_Font);
-    val_check_kind(color, k_Scalar);
-    cvPutText(val_data(img), val_get<string>(text), *(CvPoint*)val_data(org), (CvFont*)val_data(font), *(CvScalar*)val_data(color));
-}
-DEFINE_PRIM_MULT(hx_cv_core_circle);
-DEFINE_PRIM_MULT(hx_cv_core_line);
-DEFINE_PRIM_MULT(hx_cv_core_rectangle);
-DEFINE_PRIM_MULT(hx_cv_core_createFont);
-DEFINE_PRIM(hx_cv_core_putText, 5);
 
+static std::vector<int> arrayIndices(value indices) {
+    val_check(indices, array);
+    std::vector<int> result(val_array_size(indices));
+    for (int i = 0; i < static_cast<int>(result.size()); ++i) result[i] = val_get_int(val_array_i(indices, i));
+    return result;
+}
+
+CV_PRIM(core, get1D, 2, (value handle, value index),
+    cv::Mat& matrix = hx_cv_core_mat(handle);
+    cv::Scalar element = matrixElement(matrix, linearIndices(matrix, val_get_int(index)));
+    return hx_cv_core_toScalar(new cv::Scalar(element));
+);
+CV_PRIM(core, getReal1D, 2, (value handle, value index),
+    cv::Mat& matrix = hx_cv_core_mat(handle);
+    CV_Assert(matrix.channels() == 1);
+    cv::Scalar element = matrixElement(matrix, linearIndices(matrix, val_get_int(index)));
+    return alloc_float(element[0]);
+);
+CV_PRIM(core, get2D, 3, (value handle, value row, value col),
+    cv::Mat& matrix = hx_cv_core_mat(handle);
+    cv::Scalar element = matrixElement(matrix, {val_get_int(row), val_get_int(col)});
+    return hx_cv_core_toScalar(new cv::Scalar(element));
+);
+CV_PRIM(core, getReal2D, 3, (value handle, value row, value col),
+    cv::Mat& matrix = hx_cv_core_mat(handle);
+    CV_Assert(matrix.channels() == 1);
+    cv::Scalar element = matrixElement(matrix, {val_get_int(row), val_get_int(col)});
+    return alloc_float(element[0]);
+);
+CV_PRIM(core, get3D, 4, (value handle, value i, value j, value k),
+    cv::Mat& matrix = hx_cv_core_mat(handle);
+    cv::Scalar element = matrixElement(matrix, {val_get_int(i), val_get_int(j), val_get_int(k)});
+    return hx_cv_core_toScalar(new cv::Scalar(element));
+);
+CV_PRIM(core, getReal3D, 4, (value handle, value i, value j, value k),
+    cv::Mat& matrix = hx_cv_core_mat(handle);
+    CV_Assert(matrix.channels() == 1);
+    cv::Scalar element = matrixElement(matrix, {val_get_int(i), val_get_int(j), val_get_int(k)});
+    return alloc_float(element[0]);
+);
+CV_PRIM(core, getND, 2, (value handle, value indices),
+    cv::Mat& matrix = hx_cv_core_mat(handle);
+    cv::Scalar element = matrixElement(matrix, arrayIndices(indices));
+    return hx_cv_core_toScalar(new cv::Scalar(element));
+);
+CV_PRIM(core, getRealND, 2, (value handle, value indices),
+    cv::Mat& matrix = hx_cv_core_mat(handle);
+    CV_Assert(matrix.channels() == 1);
+    cv::Scalar element = matrixElement(matrix, arrayIndices(indices));
+    return alloc_float(element[0]);
+);
+
+CV_PRIM(core, absDiff, 3, (value src1, value src2, value dst),
+    cv::absdiff(hx_cv_core_mat(src1), hx_cv_core_mat(src2), hx_cv_core_mat(dst));
+    return val_null;
+);
+CV_PRIM(core, absDiffS, 3, (value src, value number, value dst),
+    cv::absdiff(hx_cv_core_mat(src), hx_cv_core_asScalar(number), hx_cv_core_mat(dst));
+    return val_null;
+);
+CV_PRIM(core, add, 4, (value src1, value src2, value dst, value mask),
+    cv::add(hx_cv_core_mat(src1), hx_cv_core_mat(src2), hx_cv_core_mat(dst), hx_cv_core_optionalMat(mask));
+    return val_null;
+);
+CV_PRIM(core, addS, 4, (value src, value number, value dst, value mask),
+    cv::add(hx_cv_core_mat(src), hx_cv_core_asScalar(number), hx_cv_core_mat(dst), hx_cv_core_optionalMat(mask));
+    return val_null;
+);
+CV_PRIM(core, sub, 4, (value src1, value src2, value dst, value mask),
+    cv::subtract(hx_cv_core_mat(src1), hx_cv_core_mat(src2), hx_cv_core_mat(dst), hx_cv_core_optionalMat(mask));
+    return val_null;
+);
+CV_PRIM(core, scaleAdd, 4, (value src1, value scale, value src2, value dst),
+    cv::scaleAdd(hx_cv_core_mat(src1), val_get_double(scale), hx_cv_core_mat(src2), hx_cv_core_mat(dst));
+    return val_null;
+);
+CV_PRIM(core, mul, 4, (value src1, value src2, value dst, value scale),
+    cv::multiply(hx_cv_core_mat(src1), hx_cv_core_mat(src2), hx_cv_core_mat(dst), val_get_double(scale));
+    return val_null;
+);
+CV_PRIM(core, div, 4, (value src1, value src2, value dst, value scale),
+    cv::divide(hx_cv_core_mat(src1), hx_cv_core_mat(src2), hx_cv_core_mat(dst), val_get_double(scale));
+    return val_null;
+);
+CV_PRIM(core, and, 4, (value src1, value src2, value dst, value mask),
+    cv::bitwise_and(hx_cv_core_mat(src1), hx_cv_core_mat(src2), hx_cv_core_mat(dst), hx_cv_core_optionalMat(mask));
+    return val_null;
+);
+CV_PRIM(core, andS, 4, (value src, value number, value dst, value mask),
+    cv::bitwise_and(hx_cv_core_mat(src), hx_cv_core_asScalar(number), hx_cv_core_mat(dst), hx_cv_core_optionalMat(mask));
+    return val_null;
+);
+CV_PRIM(core, avg, 2, (value src, value mask),
+    return hx_cv_core_toScalar(new cv::Scalar(cv::mean(hx_cv_core_mat(src), hx_cv_core_optionalMat(mask))));
+);
+CV_PRIM(core, avgSdv, 4, (value src, value mean, value stdDev, value mask),
+    cv::meanStdDev(hx_cv_core_mat(src), hx_cv_core_asScalar(mean), hx_cv_core_asScalar(stdDev), hx_cv_core_optionalMat(mask));
+    return val_null;
+);
+CV_PRIM(core, cmp, 4, (value src1, value src2, value dst, value operation),
+    cv::compare(hx_cv_core_mat(src1), hx_cv_core_mat(src2), hx_cv_core_mat(dst), val_get_int(operation));
+    return val_null;
+);
+CV_PRIM(core, cmpS, 4, (value src, value number, value dst, value operation),
+    cv::compare(hx_cv_core_mat(src), val_get_double(number), hx_cv_core_mat(dst), val_get_int(operation));
+    return val_null;
+);
+CV_PRIM(core, convertScale, 5, (value src, value dst, value depth, value scale, value shift),
+    hx_cv_core_mat(src).convertTo(hx_cv_core_mat(dst), val_get_int(depth), val_get_double(scale), val_get_double(shift));
+    return val_null;
+);
+CV_PRIM(core, convertScaleAbs, 4, (value src, value dst, value scale, value shift),
+    cv::convertScaleAbs(hx_cv_core_mat(src), hx_cv_core_mat(dst), val_get_double(scale), val_get_double(shift));
+    return val_null;
+);
+CV_PRIM(core, copy, 3, (value src, value dst, value mask),
+    hx_cv_core_mat(src).copyTo(hx_cv_core_mat(dst), hx_cv_core_optionalMat(mask));
+    return val_null;
+);
+CV_PRIM(core, set, 3, (value dst, value number, value mask),
+    hx_cv_core_mat(dst).setTo(hx_cv_core_asScalar(number), hx_cv_core_optionalMat(mask));
+    return val_null;
+);
+CV_PRIM(core, countNonZero, 1, (value src),
+    return alloc_int(cv::countNonZero(hx_cv_core_mat(src)));
+);
+CV_PRIM(core, DCT, 3, (value src, value dst, value flags),
+    cv::dct(hx_cv_core_mat(src), hx_cv_core_mat(dst), val_get_int(flags));
+    return val_null;
+);
+CV_PRIM(core, DFT, 4, (value src, value dst, value flags, value nonzeroRows),
+    cv::dft(hx_cv_core_mat(src), hx_cv_core_mat(dst), val_get_int(flags), val_get_int(nonzeroRows));
+    return val_null;
+);
+CV_PRIM(core, det, 1, (value src),
+    return alloc_float(cv::determinant(hx_cv_core_mat(src)));
+);
+CV_PRIM(core, dotProduct, 2, (value src1, value src2),
+    return alloc_float(hx_cv_core_mat(src1).dot(hx_cv_core_mat(src2)));
+);
+CV_PRIM(core, magnitude, 3, (value x, value y, value dst),
+    cv::magnitude(hx_cv_core_mat(x), hx_cv_core_mat(y), hx_cv_core_mat(dst));
+    return val_null;
+);
+CV_PRIM(core, phase, 4, (value x, value y, value angle, value degrees),
+    cv::phase(hx_cv_core_mat(x), hx_cv_core_mat(y), hx_cv_core_mat(angle), val_get_bool(degrees));
+    return val_null;
+);
+CV_PRIM(core, cartToPolar, 5, (value x, value y, value magnitude, value angle, value degrees),
+    cv::cartToPolar(hx_cv_core_mat(x), hx_cv_core_mat(y), hx_cv_core_mat(magnitude), hx_cv_core_mat(angle), val_get_bool(degrees));
+    return val_null;
+);
+CV_PRIM(core, polarToCart, 5, (value magnitude, value angle, value x, value y, value degrees),
+    cv::polarToCart(hx_cv_core_mat(magnitude), hx_cv_core_mat(angle), hx_cv_core_mat(x), hx_cv_core_mat(y), val_get_bool(degrees));
+    return val_null;
+);
+CV_PRIM(core, getCols, 3, (value src, value start, value end),
+    return hx_cv_core_toMat(new cv::Mat(hx_cv_core_mat(src).colRange(val_get_int(start), val_get_int(end))));
+);
+CV_PRIM(core, getRows, 3, (value src, value start, value end),
+    return hx_cv_core_toMat(new cv::Mat(hx_cv_core_mat(src).rowRange(val_get_int(start), val_get_int(end))));
+);
+CV_PRIM(core, getDiag, 2, (value src, value diagonal),
+    return hx_cv_core_toMat(new cv::Mat(hx_cv_core_mat(src).diag(val_get_int(diagonal))));
+);
+CV_PRIM(core, getSubRect, 2, (value src, value rectangle),
+    return hx_cv_core_toMat(new cv::Mat(hx_cv_core_mat(src)(hx_cv_core_asRect(rectangle))));
+);
+CV_PRIM(core, getElemType, 1, (value src),
+    return alloc_int(hx_cv_core_mat(src).type());
+);
+CV_PRIM(core, getSize, 1, (value src),
+    return hx_cv_core_toSize(new cv::Size(hx_cv_core_mat(src).size()));
+);
+
+CV_PRIM_MULT(core, addWeighted, 6,
+    cv::addWeighted(hx_cv_core_mat(args[0]), val_get_double(args[1]), hx_cv_core_mat(args[2]),
+        val_get_double(args[3]), val_get_double(args[4]), hx_cv_core_mat(args[5]));
+    return val_null;
+);
+
+CV_PRIM(core, merge, 2, (value sources, value dst),
+    val_check(sources, array);
+    std::vector<cv::Mat> matrices;
+    for (int i = 0; i < val_array_size(sources); ++i) matrices.push_back(hx_cv_core_mat(val_array_i(sources, i)));
+    cv::merge(matrices, hx_cv_core_mat(dst));
+    return val_null;
+);
+CV_PRIM(core, split, 1, (value src),
+    std::vector<cv::Mat> channels;
+    cv::split(hx_cv_core_mat(src), channels);
+    value result = alloc_array(channels.size());
+    for (int i = 0; i < static_cast<int>(channels.size()); ++i)
+        val_array_set_i(result, i, hx_cv_core_toMat(new cv::Mat(channels[i])));
+    return result;
+);
+
+CV_PRIM_MULT(core, circle, 7,
+    cv::circle(hx_cv_core_mat(args[0]), hx_cv_core_asPoint(args[1]), val_get_int(args[2]),
+        hx_cv_core_asScalar(args[3]), val_get_int(args[4]), val_get_int(args[5]), val_get_int(args[6]));
+    return val_null;
+);
+CV_PRIM_MULT(core, line, 7,
+    cv::line(hx_cv_core_mat(args[0]), hx_cv_core_asPoint(args[1]), hx_cv_core_asPoint(args[2]),
+        hx_cv_core_asScalar(args[3]), val_get_int(args[4]), val_get_int(args[5]), val_get_int(args[6]));
+    return val_null;
+);
+CV_PRIM_MULT(core, rectangle, 7,
+    cv::rectangle(hx_cv_core_mat(args[0]), hx_cv_core_asPoint(args[1]), hx_cv_core_asPoint(args[2]),
+        hx_cv_core_asScalar(args[3]), val_get_int(args[4]), val_get_int(args[5]), val_get_int(args[6]));
+    return val_null;
+);
+CV_PRIM_MULT(core, putText, 9,
+    cv::putText(hx_cv_core_mat(args[0]), val_get_string(args[1]), hx_cv_core_asPoint(args[2]),
+        val_get_int(args[3]), val_get_double(args[4]), hx_cv_core_asScalar(args[5]),
+        val_get_int(args[6]), val_get_int(args[7]), val_get_bool(args[8]));
+    return val_null;
+);
 
 extern "C" void core_allocateKinds() {
-    k_Point        = alloc_kind();
-    k_Point2D32f   = alloc_kind();
-    k_Point2D64f   = alloc_kind();
-    k_Point3D32f   = alloc_kind();
-    k_Point3D64f   = alloc_kind();
-    k_Size         = alloc_kind();
-    k_Size2D32f    = alloc_kind();
-    k_Rect         = alloc_kind();
-    k_Scalar       = alloc_kind();
+    k_Mat = alloc_kind();
+    k_Point = alloc_kind();
+    k_Point2D32f = alloc_kind();
+    k_Point2D64f = alloc_kind();
+    k_Point3D32f = alloc_kind();
+    k_Point3D64f = alloc_kind();
+    k_Size = alloc_kind();
+    k_Size2D32f = alloc_kind();
+    k_Rect = alloc_kind();
+    k_Scalar = alloc_kind();
     k_TermCriteria = alloc_kind();
-    k_Mat          = alloc_kind();
-    k_Image        = alloc_kind();
-    k_Font         = alloc_kind();
-
-    k_CArray = alloc_kind();
-    k_Vector = alloc_kind();
 }

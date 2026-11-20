@@ -34,7 +34,7 @@ class BetterSample {
 	static function run():Void {
 		var imagePath:String = Path.join([Sys.getCwd(), "test.jpg"]);
 		trace("Loading image: " + imagePath);
-		var source:Mat = HighGUI.loadImageM(imagePath, HighGUI.LOAD_IMAGE_COLOR);
+		var source:Mat = HighGUI.loadImage(imagePath, HighGUI.IMREAD_COLOR_BGR);
 		if (source == null) throw "Could not decode image: " + imagePath;
 		trace("Source: " + source.cols + "x" + source.rows + "; element type=" + Core.getElemType(source));
 
@@ -83,16 +83,22 @@ class BetterSample {
 			var view = views[index];
 			var outputPath:String = Path.join([outputDirectory, view.filename]);
 			trace("Saving " + outputPath);
-			if (HighGUI.saveImage(outputPath, view.image) == 0) throw "Could not save " + outputPath;
+			if (!HighGUI.saveImage(outputPath, view.image)) throw "Could not save " + outputPath;
 
 			trace("Creating window: " + view.title);
-			HighGUI.namedWindow(view.title, HighGUI.WINDOW_NORMAL | HighGUI.GUI_NORMAL);
+			HighGUI.namedWindow(view.title, HighGUI.WINDOW_NORMAL);
 			trace("Displaying image: " + view.title);
 			HighGUI.showImage(view.title, view.image);
 			HighGUI.resizeWindow(view.title, 320, 240);
 			HighGUI.moveWindow(view.title, 40 + (index % 3) * 360, 60 + Std.int(index / 3) * 330);
 			trace("Window configured: " + view.title);
 		}
+
+		if (!HighGUI.createTrackbar("Threshold", "4 - Binary threshold", 110, 255, value -> {
+			ImgProc.threshold(blurred, binary, value, 255, ImgProc.THRESH_BINARY);
+			HighGUI.showImage("4 - Binary threshold", binary);
+			trace("Threshold changed: " + value);
+		})) throw "Could not create threshold trackbar";
 
 		trace("Processing GUI events; press any key in an image window to exit");
 		trace("Saved results: " + outputDirectory + " (same filenames are replaced on each run)");

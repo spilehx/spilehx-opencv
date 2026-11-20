@@ -7,11 +7,13 @@ class Sample3 {
         haxe.Log.trace = function (m,?_) Sys.println(Std.string(m));
 
         var I = null;
-        try I = HighGUI.loadImageM("test.jpg", HighGUI.LOAD_IMAGE_COLOR)
+        try I = HighGUI.loadImage("test.jpg", HighGUI.IMREAD_COLOR_BGR)
         catch (_:Dynamic) {
             trace("Couldn't load image");
             Sys.exit(1);
         }
+
+        if (I == null) throw "Could not decode test.jpg";
 
         HighGUI.namedWindow("Input", HighGUI.WINDOW_AUTOSIZE);
         HighGUI.namedWindow("Output", HighGUI.WINDOW_AUTOSIZE);
@@ -23,7 +25,7 @@ class Sample3 {
         var J = Core.cloneMat(I);
 
         // Create kernel matrix and assign values
-        var kern = Core.createMat(3, 3, Core._32F);
+        var kern = Core.createMat(3, 3, Core._32FC1);
         var i = 0;
         for (x in [0,-1,0,
                    -1,5,-1,
@@ -35,6 +37,7 @@ class Sample3 {
         HighGUI.showImage("Output", J);
 
         HighGUI.waitKey(0);
+        HighGUI.destroyAllWindows();
         Sys.exit(0);
     }
 }

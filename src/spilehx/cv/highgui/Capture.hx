@@ -4,7 +4,8 @@ import spilehx.internal.NativeBinding;
 
 /**
  * Native video capture handle opened by `HighGUI.captureFromFile`.
- * Keep it alive while using frames borrowed from the capture.
+ * Release explicitly with `HighGUI.releaseCapture`, or let GC close the input.
+ * Returned frames own independent storage and do not retain this handle.
  */
 abstract Capture(NativeBinding) from NativeBinding to NativeBinding {
     @:allow(spilehx.cv)

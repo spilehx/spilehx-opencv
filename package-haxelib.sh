@@ -65,6 +65,10 @@ import sys
 import xml.etree.ElementTree as ET
 
 install, runtime = map(Path, sys.argv[1:])
+licenses = install / "share/licenses/opencv5"
+if licenses.is_dir():
+    shutil.copytree(licenses, runtime / "licenses")
+
 archives = {}
 for archive in install.rglob("*.a"):
     if archive.name in archives:
@@ -72,18 +76,14 @@ for archive in install.rglob("*.a"):
     archives[archive.name] = archive
     shutil.copy2(archive, runtime / archive.name)
 
-flags = shlex.split(subprocess.check_output(
-    ["pkg-config", "--static", "--libs", str(install / "lib/pkgconfig/opencv.pc")],
-    text=True))
-# OpenCV 2.4 reads IMPORTED_LOCATION for Qt5 targets, which expose their
-# locations per configuration instead. Its .pc file loses these Qt dependencies.
-if "-lextra_component-NOTFOUND" in flags:
-    flags.remove("-lextra_component-NOTFOUND")
-    flags.extend(shlex.split(subprocess.check_output(
-        ["pkg-config", "--libs", "Qt5Widgets", "Qt5Test", "Qt5Concurrent"],
-        text=True)))
+# System dependencies exported by the pinned Linux OpenCV 5.1.0 build.
+flags = ["-ljpeg", "-lwebp", "-lwebpmux", "-lwebpdemux", "-lpng", "-ltiff",
+         "-lz", "-ldl", "-lm", "-lpthread", "-lrt"]
+flags.extend(shlex.split(subprocess.check_output(
+    ["pkg-config", "--libs", "Qt5Widgets", "Qt5Test", "Qt5Concurrent"],
+    text=True)))
 if any("NOTFOUND" in flag for flag in flags):
-    raise SystemExit("Unresolved dependency in OpenCV pkg-config metadata")
+    raise SystemExit("Unresolved system dependency in linker flags")
 root = ET.Element("xml")
 target = ET.SubElement(root, "target", id="haxe")
 def link(value):

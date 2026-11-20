@@ -20,7 +20,7 @@ abstract Scalar(Scalar_) from Scalar_ to Scalar_ {
     /**
      * Reads a component using method or array access syntax.
      * @param i Component index from 0 through 3.
-     * @return The component value rounded to single precision by the native binding.
+     * @return The component value.
      */
     @:arrayAccess public inline function get(i:Int):Float {
         return Core.load("Scalar_get_i", 2)(this.nativeObject, i);
@@ -29,7 +29,7 @@ abstract Scalar(Scalar_) from Scalar_ to Scalar_ {
      * Writes a component using method or array access syntax.
      * @param i Component index from 0 through 3.
      * @param x New component value.
-     * @return The assigned value rounded to single precision by the native binding.
+     * @return The assigned value.
      */
     @:arrayAccess public inline function set(i:Int, x:Float):Float {
         return Core.load("Scalar_set_i", 3)(this.nativeObject, i, x);

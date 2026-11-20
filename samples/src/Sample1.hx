@@ -11,9 +11,8 @@ class Sample1 {
             + "; QT_QPA_PLATFORM=" + Sys.getEnv("QT_QPA_PLATFORM"));
 
         var image = null;
-        // loadImageM returns a Matrix rather than IPL Image object (loadImage).
         trace("Loading test.jpg");
-        try image = HighGUI.loadImageM("test.jpg", HighGUI.LOAD_IMAGE_COLOR)
+        try image = HighGUI.loadImage("test.jpg", HighGUI.IMREAD_COLOR_BGR)
         catch (error:Dynamic) {
             trace("Image loading failed: " + Std.string(error));
             Sys.exit(1);
@@ -27,8 +26,7 @@ class Sample1 {
 
         // Create window and display image.
         trace("Calling namedWindow()");
-        var windowResult = HighGUI.namedWindow("Display window", HighGUI.WINDOW_AUTOSIZE);
-        trace("namedWindow() returned: " + windowResult);
+        HighGUI.namedWindow("Display window", HighGUI.WINDOW_AUTOSIZE);
         trace("Calling showImage()");
         HighGUI.showImage("Display window", image);
         trace("showImage() returned");
@@ -37,6 +35,7 @@ class Sample1 {
         trace("Calling waitKey(0); waiting for a key press in the image window");
         HighGUI.waitKey(0);
         trace("waitKey(0) returned; exiting");
+        HighGUI.destroyAllWindows();
         Sys.exit(0);
     }
 }

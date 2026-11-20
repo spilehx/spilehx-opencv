@@ -17,10 +17,8 @@ class KeyPoint extends NativeBinding {
     }
 
 
-    var _pt:Point2D32f;
     /**
-     * Shared mutable feature coordinates in pixels. Changing the coordinates
-     * updates this keypoint; the returned point keeps its keypoint alive.
+     * Independent copy of the feature coordinates in pixels.
      */
     public var pt      (get,never):Point2D32f;
     /**
@@ -55,13 +53,12 @@ class KeyPoint extends NativeBinding {
      * @param class_id Application-defined identifier, defaulting to -1.
      * @return A new keypoint.
      */
-    public static inline function make(x:Float, y:Float, size:Float, angle:Float, response:Float, octave:Int, class_id:Int=-1):KeyPoint {
+    public static inline function make(x:Float, y:Float, size:Float, angle:Float=-1, response:Float=0, octave:Int=0, class_id:Int=-1):KeyPoint {
         return KeyPoint.cvt(Features2D.load("KeyPoint_make", 7)(x, y, size, angle, response, octave, class_id));
     }
 
     inline function get_pt() {
-        if (_pt == null) _pt = new Point2D32f(Features2D.load("KeyPoint_get_pt", 1)(nativeObject), this);
-        return _pt;
+        return Point2D32f.cvt(Features2D.load("KeyPoint_get_pt", 1)(nativeObject));
     }
     inline function get_size    () { return Features2D.load("KeyPoint_get_size",     1)(nativeObject); }
     inline function get_angle   () { return Features2D.load("KeyPoint_get_angle",    1)(nativeObject); }
@@ -71,6 +68,6 @@ class KeyPoint extends NativeBinding {
 
 
     public inline function toString() {
-        return '{KeyKeyPoint pt=$pt size=$size angle=$angle response=$response octave=$octave class_id=$class_id}';
+        return '{KeyPoint pt=$pt size=$size angle=$angle response=$response octave=$octave class_id=$class_id}';
     }
 }

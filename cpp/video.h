@@ -1,4 +1,4 @@
-#include <video/video.hpp>
-#include "utils.h"
+#pragma once
 
-extern "C" { void video_allocateKinds(); }
+#include <opencv2/video/tracking.hpp>
+#include "core.h"
