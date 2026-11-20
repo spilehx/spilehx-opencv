@@ -1,6 +1,6 @@
 package spilehx.cv.core;
 
-import spilehx.build.NativeBinding;
+import spilehx.internal.NativeBinding;
 import spilehx.cv.core.CVBuffer;
 import spilehx.cv.core.Size;
 

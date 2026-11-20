@@ -1,5 +1,7 @@
-package spilehx.build;
+package spilehx.internal;
 
+@:noCompletion
+@:noDoc
 class NativeBinding {
     @:allow(spilehx.cv)
     var nativeObject:Dynamic;

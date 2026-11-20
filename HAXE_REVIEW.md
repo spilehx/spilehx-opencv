@@ -1,15 +1,15 @@
 # Haxe file inventory
 
-All 30 Haxe files under `src/spilehx/cv` and `src/spilehx/build`, including subdirectories, grouped by functional area with one-line summaries based on static source inspection.
+All 30 Haxe files under `src/spilehx/cv` and `src/spilehx/internal`, including subdirectories, grouped by functional area with one-line summaries based on static source inspection.
 
 ## Build and native binding infrastructure
 
 | File | Function |
 | --- | --- |
-| [Build.hx](src/spilehx/build/Build.hx) | Configures compilation for Linux x86_64 C++ consumers and attaches the packaged native linker configuration. |
-| [Macros.hx](src/spilehx/build/Macros.hx) | Generates static binding methods from `@:CvProc` metadata, including native conversions, defaults, and debug checks. |
-| [NativeBinding.hx](src/spilehx/build/NativeBinding.hx) | Stores opaque native handles and supplies null-aware conversions for individual wrappers and wrapper arrays. |
-| [NativeLibrary.hx](src/spilehx/build/NativeLibrary.hx) | Initializes native OpenCV bindings once before loading C++ CFFI primitives. |
+| [Build.hx](src/spilehx/internal/Build.hx) | Configures compilation for Linux x86_64 C++ consumers and attaches the packaged native linker configuration. |
+| [Macros.hx](src/spilehx/internal/Macros.hx) | Generates static binding methods from `@:CvProc` metadata, including native conversions, defaults, and debug checks. |
+| [NativeBinding.hx](src/spilehx/internal/NativeBinding.hx) | Stores opaque native handles and supplies null-aware conversions for individual wrappers and wrapper arrays. |
+| [NativeLibrary.hx](src/spilehx/internal/NativeLibrary.hx) | Initializes native OpenCV bindings once before loading C++ CFFI primitives. |
 
 ## Core operations, images, matrices, and drawing
 

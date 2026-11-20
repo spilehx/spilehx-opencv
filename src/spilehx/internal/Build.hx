@@ -1,4 +1,4 @@
-package spilehx.build;
+package spilehx.internal;
 
 #if macro
 import haxe.io.Path;
@@ -7,6 +7,8 @@ import haxe.macro.Context;
 import sys.FileSystem;
 #end
 
+@:noCompletion
+@:noDoc
 class Build {
 #if macro
     public static function configure():Void {
@@ -20,7 +22,7 @@ class Build {
         }
 
         Compiler.define("HXCPP_M64");
-        var libraryDir:String = Path.normalize(Path.join([Path.directory(Context.resolvePath("spilehx/build/Build.hx")), "../../.."]));
+        var libraryDir:String = Path.normalize(Path.join([Path.directory(Context.resolvePath("spilehx/internal/Build.hx")), "../../.."]));
         var runtimeDir:String = Path.join([libraryDir, "native", "Linux64"]);
         var buildFile:String = Path.join([runtimeDir, "Build.xml"]);
         if (!FileSystem.exists(buildFile)) {
@@ -28,7 +30,7 @@ class Build {
         }
 
         var buildXml:String = '<include name="' + StringTools.htmlEscape(buildFile, true) + '"/>';
-        Compiler.addMetadata("@:buildXml(" + haxe.Json.stringify(buildXml) + ")", "spilehx.build.NativeLibrary");
+        Compiler.addMetadata("@:buildXml(" + haxe.Json.stringify(buildXml) + ")", "spilehx.internal.NativeLibrary");
     }
 #end
 }

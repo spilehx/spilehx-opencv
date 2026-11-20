@@ -1,6 +1,6 @@
 package spilehx.cv.core;
 
-import spilehx.build.NativeBinding;
+import spilehx.internal.NativeBinding;
 
 class Size extends NativeBinding {
     @:allow(spilehx.cv)

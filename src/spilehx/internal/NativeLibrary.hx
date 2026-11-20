@@ -1,6 +1,8 @@
-package spilehx.build;
+package spilehx.internal;
 
 @:cppFileCode('extern "C" void hx_opencv_entry();')
+@:noCompletion
+@:noDoc
 class NativeLibrary {
     static var initialized:Bool = false;
 

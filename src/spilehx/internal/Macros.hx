@@ -1,10 +1,12 @@
-package spilehx.build;
+package spilehx.internal;
 
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
 
-@:autoBuild(spilehx.build.Macros.CvProcsImpl.run())
+@:autoBuild(spilehx.internal.Macros.CvProcsImpl.run())
+@:noCompletion
+@:noDoc
 @:remove extern interface CvProcs {}
 
 
@@ -32,6 +34,8 @@ import haxe.macro.Expr;
 // with any default check on parameter disregarded
 // and the message prepended by "x :: "
 //
+@:noCompletion
+@:noDoc
 class CvProcsImpl {
 #if macro
     static function isProc(f:Metadata) {
@@ -68,8 +72,8 @@ class CvProcsImpl {
             case TPath({name:"Array",params:[TPType(t)]}):
                 var e2 = targ(e, t);
                 if (e2 == null) e;
-                else macro spilehx.build.NativeBinding.mapNative($e);
-            default: macro spilehx.build.NativeBinding.native($e);
+                else macro spilehx.internal.NativeBinding.mapNative($e);
+            default: macro spilehx.internal.NativeBinding.native($e);
             }
         }
 

@@ -1,6 +1,6 @@
 package spilehx.cv.features2d;
 
-import spilehx.build.NativeBinding;
+import spilehx.internal.NativeBinding;
 import spilehx.cv.Core.Arr;
 import spilehx.cv.features2d.KeyPoint;
 

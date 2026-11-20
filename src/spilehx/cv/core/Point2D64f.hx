@@ -1,6 +1,6 @@
 package spilehx.cv.core;
 
-import spilehx.build.NativeBinding;
+import spilehx.internal.NativeBinding;
 
 class Point2D64f extends NativeBinding {
     @:allow(spilehx.cv)

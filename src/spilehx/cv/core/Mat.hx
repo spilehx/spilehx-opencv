@@ -1,6 +1,6 @@
 package spilehx.cv.core;
 
-import spilehx.build.NativeBinding;
+import spilehx.internal.NativeBinding;
 import spilehx.cv.core.CVBuffer;
 
 class Mat extends NativeBinding {

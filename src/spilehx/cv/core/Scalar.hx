@@ -1,6 +1,6 @@
 package spilehx.cv.core;
 
-import spilehx.build.NativeBinding;
+import spilehx.internal.NativeBinding;
 
 abstract Scalar(Scalar_) from Scalar_ to Scalar_ {
     @:allow(spilehx.cv)

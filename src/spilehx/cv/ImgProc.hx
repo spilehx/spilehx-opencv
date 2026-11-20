@@ -1,15 +1,15 @@
 package spilehx.cv;
 
-import spilehx.build.NativeBinding;
+import spilehx.internal.NativeBinding;
 #if cpp
-import spilehx.build.NativeLibrary as Lib;
+import spilehx.internal.NativeLibrary as Lib;
 #else
 import neko.Lib;
 #end
 import spilehx.cv.core.*;
 import spilehx.cv.Core;
 
-import spilehx.build.Macros;
+import spilehx.internal.Macros;
 
 typedef ConvKernel = NativeBinding;
 

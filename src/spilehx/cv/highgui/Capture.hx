@@ -1,6 +1,6 @@
 package spilehx.cv.highgui;
 
-import spilehx.build.NativeBinding;
+import spilehx.internal.NativeBinding;
 
 abstract Capture(NativeBinding) from NativeBinding to NativeBinding {
     @:allow(spilehx.cv)

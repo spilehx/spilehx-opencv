@@ -1,7 +1,7 @@
 package spilehx.cv;
 
 #if cpp
-import spilehx.build.NativeLibrary as Lib;
+import spilehx.internal.NativeLibrary as Lib;
 #else
 import neko.Lib;
 #end
@@ -9,7 +9,7 @@ import spilehx.cv.core.*;
 import spilehx.cv.Core;
 import spilehx.cv.features2d.*;
 
-import spilehx.build.Macros;
+import spilehx.internal.Macros;
 
 class Features2D implements CvProcs {
     @:allow(spilehx.cv.features2d)

@@ -1,6 +1,6 @@
 package spilehx.cv.core;
 
-import spilehx.build.NativeBinding;
+import spilehx.internal.NativeBinding;
 
 abstract Font(NativeBinding) from NativeBinding to NativeBinding {
     @:allow(spilehx.cv)
