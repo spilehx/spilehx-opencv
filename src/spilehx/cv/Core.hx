@@ -1,11 +1,7 @@
 package spilehx.cv;
 
 import spilehx.internal.NativeBinding;
-#if cpp
 import spilehx.internal.NativeLibrary as Lib;
-#else
-import neko.Lib;
-#end
 import spilehx.cv.core.*;
 import spilehx.cv.core.Scalar.RGB;
 
@@ -17,14 +13,6 @@ class Core implements CvProcs {
     @:allow(spilehx.cv.core)
     static inline function load(n:String, p:Int=-1):Dynamic
         return Lib.load("opencv", "hx_cv_core_"+n, p > 5 ? -1 : p);
-
-    public static inline function init() {
-        #if neko
-            var i = Lib.load("opencv","neko_init",5);
-            if (i != null)
-                i(function(s)return new String(s),function(len:Int){var r=[];if(len>0)r[len-1]=null;return r;},null,true,false);
-        #end
-    }
 
     // -------------------------
     // Flags for initialisation of TermCriteria object.

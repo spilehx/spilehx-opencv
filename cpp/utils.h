@@ -1,7 +1,6 @@
 #pragma once
 #ifndef UTILS_H
 #define UTILS_H
-#define NEKO_COMPATIBLE
 #include <hx/CFFI.h>
 
 
@@ -12,7 +11,7 @@ typedef const char* string;
 
 // Parameterised allocs
 template <typename T>
-static value alloc(T x) { neko_error(); }
+static value alloc(T x) { hx_error(); }
 template <>
 inline value alloc(int x) { return alloc_int(x); }
 template <>
@@ -31,7 +30,7 @@ inline value alloc_double(double x) { return alloc(x); }
 
 // Parameterised val_gets
 template <typename T>
-T val_get(value x) { neko_error(); }
+T val_get(value x) { hx_error(); }
 template <>
 inline int val_get(value x) { return val_get_int(x); }
 template <>

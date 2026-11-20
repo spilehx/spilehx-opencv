@@ -20,7 +20,7 @@
 // cvCalcOpticalFlowFarneback
 //
 value hx_cv_video_calcOpticalFlowBM(value* args, int nargs) {
-    if (nargs != 8) neko_error();
+    if (nargs != 8) hx_error();
     value prev        = args[0];
     value curr        = args[1];
     value blockSize   = args[2];
@@ -36,7 +36,7 @@ value hx_cv_video_calcOpticalFlowBM(value* args, int nargs) {
     return val_null;
 }
 value hx_cv_video_calcOpticalFlowHS(value* args, int nargs) {
-    if (nargs != 7) neko_error();
+    if (nargs != 7) hx_error();
     value prev        = args[0];
     value curr        = args[1];
     value usePrevious = args[2];
@@ -54,7 +54,7 @@ value hx_cv_video_calcOpticalFlowLK(value prev, value curr, value winSize, value
     return val_null;
 }
 value hx_cv_video_calcOpticalFlowPyrLK(value* args, int nargs) {
-    if (nargs != 13) neko_error();
+    if (nargs != 13) hx_error();
     const CvArr* prev  = val_data(args[0]);
     const CvArr* curr  = val_data(args[1]);
     CvArr* prevPyr     = val_data(args[2]);

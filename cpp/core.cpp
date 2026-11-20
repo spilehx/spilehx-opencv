@@ -387,7 +387,7 @@ value hx_cv_core_addS(value src, value _value, value dst, value mask) {
     return val_null;
 }
 value hx_cv_core_addWeighted(value* args, int nargs) {
-    if (nargs != 6) neko_error();
+    if (nargs != 6) hx_error();
     value src1  = args[0];
     value alpha = args[1];
     value src2  = args[2];
@@ -513,7 +513,7 @@ value hx_cv_core_getRealND(value arr, value idx) {
     return ret;
 }
 value hx_cv_core_getRows(value* args, int nargs) {
-    if (nargs != 5) neko_error();
+    if (nargs != 5) hx_error();
     value arr      = args[0];
     value submat   = args[1];
     value startRow = args[2];
@@ -637,7 +637,7 @@ DEFINE_PRIM(hx_cv_core_sub,             4);
 DECLARE_KIND(k_Font);
 DEFINE_KIND(k_Font);
 value hx_cv_core_circle(value* args, int nargs) {
-    if (nargs != 7) neko_error();
+    if (nargs != 7) hx_error();
     value img       = args[0];
     value center    = args[1];
     value radius    = args[2];
@@ -651,7 +651,7 @@ value hx_cv_core_circle(value* args, int nargs) {
     return val_null;
 }
 value hx_cv_core_line(value* args, int nargs) {
-    if (nargs != 7) neko_error();
+    if (nargs != 7) hx_error();
     value img       = args[0];
     value pt1       = args[1];
     value pt2       = args[2];
@@ -666,7 +666,7 @@ value hx_cv_core_line(value* args, int nargs) {
     return val_null;
 }
 value hx_cv_core_rectangle(value* args, int nargs) {
-    if (nargs != 7) neko_error();
+    if (nargs != 7) hx_error();
     value img       = args[0];
     value pt1       = args[1];
     value pt2       = args[2];
@@ -681,7 +681,7 @@ value hx_cv_core_rectangle(value* args, int nargs) {
     return val_null;
 }
 value hx_cv_core_createFont(value* args, int nargs) {
-    if (nargs != 6) neko_error();
+    if (nargs != 6) hx_error();
     value fontFace  = args[0];
     value hscale    = args[1];
     value vscale    = args[2];

@@ -1,4 +1,4 @@
-bin/
+/bin/
 /build/
 /vendor/*
 !/vendor/toolchain
@@ -8,3 +8,9 @@ ndll/
 dist/
 /native/*
 !/native/Linux64/
+
+
+/samples/bin/*
+!/samples/bin/test.jpg
+
+/samples/build/

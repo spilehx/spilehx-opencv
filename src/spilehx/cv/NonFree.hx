@@ -1,10 +1,6 @@
 package spilehx.cv;
 
-#if cpp
 import spilehx.internal.NativeLibrary as Lib;
-#else
-import neko.Lib;
-#end
 import spilehx.cv.core.*;
 import spilehx.cv.Core;
 import spilehx.cv.nonfree.*;

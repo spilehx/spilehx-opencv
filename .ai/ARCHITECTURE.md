@@ -9,7 +9,6 @@ Implementation takes precedence if this map becomes outdated. See [working pract
 - Consumer applications supply their own `main` and use `-lib spilehx-opencv`. `haxelib.json` declares the package, `src` class path, and hxcpp dependency; `extraParams.hxml` invokes `spilehx.internal.Build.configure()`.
 - `src/spilehx/internal/Build.hx` rejects unsupported targets, defines `HXCPP_M64`, and adds the `native/Linux64/Build.xml` include to `spilehx.internal.NativeLibrary` through build metadata. Display/no-output compilation skips this setup.
 - `make` delegates to `package-haxelib.sh`, the native build/package entry point.
-- The Neko branches remaining in source are not the supported package path.
 
 ## Code locations
 

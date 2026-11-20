@@ -20,7 +20,7 @@ void finalise_ConvKernel(value v) {
     cvReleaseStructuringElement(&ptr);
 }
 value hx_cv_imgproc_createStructuringElementEx(value *args, int nargs) {
-    if (nargs != 6) neko_error();
+    if (nargs != 6) hx_error();
     value cols    = args[0];
     value rows    = args[1];
     value anchorX = args[2];
@@ -97,7 +97,7 @@ value hx_cv_imgproc_medianBlur(value src, value dst, value ksize) {
     return val_null;
 }
 value hx_cv_imgproc_morphologyEx(value* args, int nargs) {
-    if (nargs != 6) neko_error();
+    if (nargs != 6) hx_error();
     value src        = args[0];
     value dst        = args[1];
     value tmp        = args[2];
@@ -113,7 +113,7 @@ value hx_cv_imgproc_pyrDown(value src, value dst) { // CV_GAUSSIAN_5x5 is suppor
     return val_null;
 }
 value hx_cv_imgproc_smooth(value* args, int nargs) {
-    if (nargs != 7) neko_error();
+    if (nargs != 7) hx_error();
     value src      = args[0];
     value dst      = args[1];
     int smoothType = val_get<int>(args[2]);
@@ -153,7 +153,7 @@ value hx_cv_imgproc_cvtColor(value src, value dst, value code) {
     return val_null;
 }
 value hx_cv_imgproc_distTransform(value* args, int nargs) {
-    if (nargs != 6) neko_error();
+    if (nargs != 6) hx_error();
     value src         = args[0];
     value dst         = args[1];
     int distance_type = val_get<int>(args[2]);
@@ -224,7 +224,7 @@ DEFINE_PRIM(hx_cv_imgproc_threshold, 5);
 // cvGoodFeaturesToTrack
 //
 value hx_cv_imgproc_goodFeaturesToTrack(value* args, int nargs) {
-    if (nargs != 11) neko_error();
+    if (nargs != 11) hx_error();
     const CvArr* image     = val_data(args[0]);
           CvArr* eigImage  = val_data(args[1]);
           CvArr* tempImage = val_data(args[2]);

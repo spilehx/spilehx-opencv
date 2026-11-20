@@ -22,7 +22,7 @@ value hx_cv_nonfree_SIFT(value nFeatures, value nOctaveLayers, value constrastTh
     return v;
 }
 value hx_cv_nonfree_SIFT_detect(value* args, int nargs) {
-    if (nargs != 6) neko_error();
+    if (nargs != 6) hx_error();
     value thisp       = args[0];
     value img         = args[1];
     value mask        = args[2];
@@ -78,7 +78,7 @@ value hx_cv_nonfree_SURF(value hessian, value nOctaves, value nLayers, value ext
     return v;
 }
 value hx_cv_nonfree_SURF_detect(value* args, int nargs) {
-    if (nargs != 6) neko_error();
+    if (nargs != 6) hx_error();
     value thisp       = args[0];
     value img         = args[1];
     value mask        = args[2];

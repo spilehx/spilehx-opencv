@@ -5,11 +5,7 @@ import spilehx.cv.core.Image;
 import spilehx.cv.core.Mat;
 import spilehx.cv.highgui.*;
 
-#if cpp
 import spilehx.internal.NativeLibrary as Lib;
-#else
-import neko.Lib;
-#end
 
 import spilehx.internal.Macros;
 

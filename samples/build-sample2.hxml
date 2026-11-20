@@ -1,0 +1,10 @@
+-lib spilehx-opencv
+-cp src
+-main Sample2
+-cpp build/Sample2
+
+
+
+## Move binary to bin and remove build to clean up
+--next 
+--cmd mkdir -p ./bin && find ./build/Sample2 -maxdepth 1 -type f ! -name "*.*" -exec mv -t ./bin -- {} +
