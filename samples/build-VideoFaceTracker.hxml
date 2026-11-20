@@ -1,0 +1,10 @@
+-lib spilehx-opencv
+-cp src
+-main VideoFaceTracker
+-cpp build/VideoFaceTracker
+
+
+
+## Move binary to bin and remove build to clean up
+--next 
+--cmd mkdir -p ./bin && find ./build/VideoFaceTracker -maxdepth 1 -type f ! -name "*.*" -exec mv -t ./bin -- {} +

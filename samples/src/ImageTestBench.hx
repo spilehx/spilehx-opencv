@@ -1,3 +1,7 @@
+package ;
+
+import helpers.ImageFilters;
+
 import spilehx.cv.features2d.KeyPoint;
 import spilehx.cv.Features2D;
 import spilehx.cv.ImgProc;
@@ -135,38 +139,5 @@ private class TestFilter {
 		this.label = label;
 		this.callBack = callBack;
 		this.applied = false;
-	}
-}
-
-private class ImageFilters {
-	public static function greyscale(source:Mat):Mat {
-		var grey:Mat = Core.createMat(source.rows, source.cols, Core._8UC1);
-		ImgProc.cvtColor(source, grey, ImgProc.BGR2GRAY);
-		return grey;
-	}
-
-	public static function gaussianBlur(source:Mat):Mat {
-		var blurred:Mat = Core.createMat(source.rows, source.cols, Core._8UC1);
-		ImgProc.gaussianBlur(source, blurred, Core.size(9, 9), 2.0);
-		return blurred;
-	}
-
-	public static function detectCorners(source:Mat):Mat {
-		var detector = Features2D.gfft(80, 0.02, 12);
-		var keypoints:Array<KeyPoint> = [];
-		detector.detect(source, null, keypoints);
-		var corners:Mat = Core.cloneMat(source);
-		for (keypoint in keypoints) {
-			var point = keypoint.pt;
-			Core.circle(corners, Core.point(Math.round(point.x), Math.round(point.y)), 5, Core.rgb(255, 70, 70), 2);
-		}
-        trace("Detected " + keypoints.length + " corners");
-		return corners;
-	}
-	
-	public static function threshold(source:Mat):Mat {
-		var thresh:Mat = Core.createMat(source.rows, source.cols, Core._8UC1);
-		ImgProc.threshold(source, thresh, 128, 255, ImgProc.THRESH_BINARY);
-		return thresh;
 	}
 }
