@@ -13,6 +13,8 @@ class TestBench {
 class TestBenchApplication {
 	private var sourceImage:Mat;
 	private var outputImage:Mat;
+	private var filters:Array<TestFilter>;
+
 	public function new() {}
 
 	public function run() {
@@ -22,12 +24,10 @@ class TestBenchApplication {
 
 		showImageWindow("Input window", sourceImage);
 
-		showFilterWindow(getFilters());
+		filters = getFilters();
+		showFilterWindow(filters);
 
-		outputImage = applyGreyscale(sourceImage);
 		showImageWindow("Output window", outputImage);
-
-
 
 		HighGUI.waitKey(0);
 		trace("waitKey(0) returned; exiting");
@@ -37,18 +37,36 @@ class TestBenchApplication {
 
 	private function getFilters():Array<TestFilter> {
 		return [
-			new TestFilter("Filter 1", filterCallBack),
-			new TestFilter("Filter 2", filterCallBack)
+			// new TestFilter("Filter 1", function(checked:Bool):Void {
+			// 	filterCallBack(checked, ImageFilters.greyscale);
+			// }),
+			new TestFilter("Filter 2", function(checked:Bool):Void {
+				filterCallBack(checked, ImageFilters.greyscale);
+			})
 		];
 	}
 
-
-	private function filterCallBack(checked:Bool):Void {
+	private function filterCallBack(checked:Bool, filter:Bool->Mat->Mat):Void {
 		trace("Filter callback called with checked: " + checked);
+		outputImage = filter(checked, outputImage);
 	}
 
+	private function applyFilter(filter:TestFilter, checked:Bool):Void {
+		filter.applied = checked;
+		// filter.callBack(checked);
+		updateWithFilters();
+	}
 
+	private function updateWithFilters():Void {
+		outputImage = sourceImage;
+		for (filter in filters) {
+			if (filter.applied) {
+				filter.callBack(true);
+			}
+		}
 
+		HighGUI.showImage("Output window", outputImage);
+	}
 
 	private function showFilterWindow(filters:Array<TestFilter>):Void {
 		var title:String = "Filters";
@@ -82,7 +100,8 @@ class TestBenchApplication {
 				if (y >= top && y <= top + 24) {
 					checked[index] = !checked[index];
 					trace(filters[index].label + " checked: " + checked[index]);
-					filters[index].callBack(checked[index]);
+					// filters[index].callBack(checked[index]);
+					applyFilter(filters[index], checked[index]);
 					redraw();
 					return;
 				}
@@ -111,21 +130,27 @@ class TestBenchApplication {
 
 		return image;
 	}
-
-	private function applyGreyscale(source:Mat):Mat {
-		var grey:Mat = Core.createMat(source.rows, source.cols, Core._8UC1);
-		ImgProc.cvtColor(source, grey, ImgProc.BGR2GRAY);
-
-		return grey;
-	}
 }
 
 private class TestFilter {
 	public var label(default, null):String;
 	public var callBack(default, null):Bool->Void;
+	public var applied:Bool = false;
 
 	public function new(label:String, callBack:Bool->Void) {
 		this.label = label;
 		this.callBack = callBack;
+		this.applied = false;
+	}
+}
+
+private class ImageFilters {
+	public static function greyscale(apply:Bool, source:Mat):Mat {
+		if (!apply)
+			return source;
+
+		var grey:Mat = Core.createMat(source.rows, source.cols, Core._8UC1);
+		ImgProc.cvtColor(source, grey, ImgProc.BGR2GRAY);
+		return grey;
 	}
 }
