@@ -1,0 +1,11 @@
+package spilehx.cv.highgui;
+
+abstract Capture(NativeBinding) from NativeBinding to NativeBinding {
+    @:allow(spilehx.cv)
+    inline function new(x:Dynamic) this = x;
+
+    @:allow(spilehx.cv)
+    static inline function cvt(x:Dynamic):Null<Capture> {
+        return if (x == null) null else NativeBinding.generic(x);
+    }
+}

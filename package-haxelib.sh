@@ -120,7 +120,7 @@ updateDevelopmentRuntime(){
 }
 
 copyPackageFiles(){
-    cp -R cv "$PATH_TO_TEMP_DIR/"
+    cp -R src "$PATH_TO_TEMP_DIR/"
     cp haxelib.json extraParams.hxml README.md LICENSE "$PATH_TO_TEMP_DIR/"
 }
 

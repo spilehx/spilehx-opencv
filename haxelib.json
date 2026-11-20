@@ -7,6 +7,7 @@
     "version":      "0.0.4",
     "releasenote":  "Statically linked OpenCV for Linux x86_64 C++ applications; no native runtime folder required.",
     "contributors": ["spilehx"],
+    "classPath":    "src",
     "dependencies": {
         "hxcpp": ""
     }

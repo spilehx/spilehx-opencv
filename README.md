@@ -40,7 +40,8 @@ Add the library to your project's `build.hxml`. For an application with
 -cpp bin
 ```
 
-Use the bindings through imports such as `cv.Core` and `cv.HighGUI`.
+Use the bindings through imports such as `spilehx.cv.Core` and `spilehx.cv.HighGUI`.
+Existing consumers using `cv.*` must update their imports to `spilehx.cv.*`.
 
 Compile from your project directory:
 
@@ -74,7 +75,7 @@ bash package-haxelib.sh
 
 This builds static OpenCV libraries and the wrapper, generates linker metadata, and
 creates `dist/spilehx-opencv-VERSION-linux64.zip` for publication. The package
-contains `cv/`, `haxelib.json`, `extraParams.hxml`, `README.md`, `LICENSE`, and
+contains `src/spilehx/cv/`, `haxelib.json`, `extraParams.hxml`, `README.md`, `LICENSE`, and
 `native/Linux64/` with `opencv.a`, OpenCV and bundled dependency archives, a
 linker `Build.xml`, and the OpenCV license. It does not install or publish anything.
 

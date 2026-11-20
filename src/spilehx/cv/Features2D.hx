@@ -1,0 +1,26 @@
+package spilehx.cv;
+
+#if cpp
+import spilehx.cv.NativeLibrary as Lib;
+#else
+import neko.Lib;
+#end
+import spilehx.cv.core.*;
+import spilehx.cv.Core;
+import spilehx.cv.features2d.*;
+
+import spilehx.cv.Macros;
+
+class Features2D implements CvProcs {
+    @:allow(spilehx.cv.features2d)
+    static inline function load(n:String, p:Int=-1):Dynamic
+        return Lib.load("opencv", "hx_cv_features2d_"+n, p > 5 ? -1 : p);
+
+    // -------------------------
+    // BRISK
+    // -------------------------
+    // Differs from C++ API with non-constructor being used.
+    @:CvProc(BRISK) function brisk(thresh:Int=30, octaves:Int=3, patternScale:Float=1.0):BRISK;
+
+    @:CvProc(GFFT) function gfft(maxCorners:Int, qualityLevel:Float, minDistance:Float, blockSize:Int=3, useHarris:Bool=false, k:Float=0.04):GFFT;
+}

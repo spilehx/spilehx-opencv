@@ -25,18 +25,18 @@
     <!-- Specify the list of files to be compiled and the compile options. -->
 
     <files id="common">
-        <compilerflag value="-Iinclude"/>
+        <compilerflag value="-Icpp"/>
         <compilerflag value="-DSTATIC_LINK"/>
         <compilerflag value="-I${OPENCV_INCLUDE_DIR}"/>
         <compilerflag value="-I${OPENCV_INCLUDE_DIR}/opencv2"/>
 
-        <file name="src/main.cpp"/>
-        <file name="src/highgui.cpp"/>
-        <file name="src/core.cpp"/>
-        <file name="src/video.cpp"/>
-        <file name="src/imgproc.cpp"/>
-        <file name="src/nonfree.cpp"/>
-        <file name="src/features2d.cpp"/>
+        <file name="cpp/main.cpp"/>
+        <file name="cpp/highgui.cpp"/>
+        <file name="cpp/core.cpp"/>
+        <file name="cpp/video.cpp"/>
+        <file name="cpp/imgproc.cpp"/>
+        <file name="cpp/nonfree.cpp"/>
+        <file name="cpp/features2d.cpp"/>
     </files>
 
     <!-- Generate the wrapper archive; OpenCV is linked by the consuming application. -->
