@@ -84,3 +84,19 @@ Implementation is the source of truth if it differs from this guidance.
 - Follow the same reporting requirements defined under **Pre-Commit Check**.
 - Report only findings relevant to the target scope.
 - Do not make corrections or commit changes. Wait for further instructions.
+
+
+
+## Documentation Comments Task
+
+When the user's message is exactly `update documentation comments`:
+
+1. Ask: `Do you want to validate and update Haxe documentation comments in files with uncommitted changes under ./src/spilehx/cv/ and its subdirectories? (yes/no)`
+2. Wait for the user's response. Do not inspect or modify files before confirmation.
+3. If the response is `yes`, read `.ai/tasks/VALIDATE_DOCUMENTATION_COMMENTS.md` and execute its instructions.
+4. If the response is `no`, cancel the task without modifying files.
+5. For any other response, ask for an explicit `yes` or `no`.
+
+Only execute the documentation task after explicit confirmation. Do not interpret the initial command as approval.
+
+Only `.hx` files under `./src/spilehx/cv/` and its subdirectories are eligible for documentation updates. Never read or edit files under `./native/`, including for context.
