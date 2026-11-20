@@ -5,14 +5,14 @@ import spilehx.cv.Core;
 import spilehx.cv.core.Mat;
 import spilehx.cv.HighGUI;
 
-class TestBench {
+class ImageTestBench {
 	static function main() {
 		trace("TestBench starting");
 		new TestBenchApplication().run();
 	}
 }
 
-class TestBenchApplication {
+private class TestBenchApplication {
 	private static final INPUT_WINDOW_TITLE:String = "Input";
 	private static final CHECKBOX_WINDOW_TITLE:String = "Filters";
 	private static final OUTPUT_WINDOW_TITLE:String = "Output";
@@ -160,6 +160,7 @@ private class ImageFilters {
 			var point = keypoint.pt;
 			Core.circle(corners, Core.point(Math.round(point.x), Math.round(point.y)), 5, Core.rgb(255, 70, 70), 2);
 		}
+        trace("Detected " + keypoints.length + " corners");
 		return corners;
 	}
 	
