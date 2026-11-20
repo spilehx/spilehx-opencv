@@ -2,7 +2,7 @@
 
 ## Objective
 
-Validate, add, and correct documentation comments for the public API of Haxe (`.hx`) files with uncommitted Git changes under `./src/spilehx/cv/` and its subdirectories.
+Validate, add, and correct documentation comments for the public API of Haxe (`.hx`) files under `./src/spilehx/cv/` and its subdirectories, using the scope selected by the user.
 
 Follow project conventions and standard Haxe/Dox documentation practices.
 
@@ -12,7 +12,14 @@ Follow project conventions and standard Haxe/Dox documentation practices.
 
 ### Eligible Files
 
-Identify changed files using:
+Proceed only after the confirmation and scope selection defined in `AGENTS.md`. Do not infer a default scope or inspect files before both responses are received.
+
+Apply the selected scope:
+
+- `all haxe files`: Include all existing eligible `.hx` files under `./src/spilehx/cv/` and its subdirectories, regardless of Git change status. Include tracked and untracked files.
+- `only updated haxe files`: Include only existing eligible `.hx` files under that directory with staged, unstaged, or untracked changes.
+
+For `only updated haxe files`, identify changed files using:
 
 ```bash
 git status --porcelain=v1 -z --untracked-files=all
@@ -20,7 +27,7 @@ git status --porcelain=v1 -z --untracked-files=all
 
 Correctly handle staged, unstaged, partially staged, added, renamed, and untracked files. Use current filenames for renames.
 
-Process only existing `.hx` files under `./src/spilehx/cv/` and its subdirectories that have uncommitted changes. Files outside this directory are not eligible, including files renamed out of it. Exclude deleted, ignored, generated, and vendor-managed files unless explicitly maintained as source.
+For either scope, process only existing `.hx` files under `./src/spilehx/cv/` and its subdirectories. Files outside this directory are not eligible, including files renamed out of it. Exclude deleted, ignored, generated, and vendor-managed files unless explicitly maintained as source.
 
 Inspect each eligible file in full, not just modified lines.
 
@@ -158,6 +165,7 @@ Provide a concise summary:
 
 **Documentation Validation Results**
 
+- Scope: All Haxe files / Only updated Haxe files
 - Files inspected: N
 - Files updated: N
 - Comments added: N

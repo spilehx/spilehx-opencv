@@ -91,12 +91,17 @@ Implementation is the source of truth if it differs from this guidance.
 
 When the user's message is exactly `update documentation comments`:
 
-1. Ask: `Do you want to validate and update Haxe documentation comments in files with uncommitted changes under ./src/spilehx/cv/ and its subdirectories? (yes/no)`
+1. Ask: `Do you want to validate and update Haxe documentation comments under ./src/spilehx/cv/ and its subdirectories? (yes/no)`
 2. Wait for the user's response. Do not inspect or modify files before confirmation.
-3. If the response is `yes`, read `.ai/tasks/VALIDATE_DOCUMENTATION_COMMENTS.md` and execute its instructions.
+3. If the response is `yes`, ask: `Which scope do you want: "all haxe files" or "only updated haxe files"?`
 4. If the response is `no`, cancel the task without modifying files.
 5. For any other response, ask for an explicit `yes` or `no`.
+6. After confirmation, wait for the scope selection. Do not inspect or modify files until the user chooses one of the two options. If the selection is unclear, ask for an explicit choice.
+7. Use the selected scope under `./src/spilehx/cv/` and its subdirectories:
+   - `all haxe files`: All existing eligible `.hx` files, regardless of Git change status.
+   - `only updated haxe files`: Only existing eligible `.hx` files with staged, unstaged, or untracked changes.
+8. Read `.ai/tasks/VALIDATE_DOCUMENTATION_COMMENTS.md` and execute its instructions using the selected scope.
 
-Only execute the documentation task after explicit confirmation. Do not interpret the initial command as approval.
+Only execute the documentation task after explicit confirmation and scope selection. Do not interpret the initial command as approval or infer a default scope.
 
 Only `.hx` files under `./src/spilehx/cv/` and its subdirectories are eligible for documentation updates. Never read or edit files under `./native/`, including for context.
