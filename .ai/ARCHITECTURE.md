@@ -6,30 +6,30 @@ Implementation takes precedence if this map becomes outdated. See [working pract
 
 `spilehx-opencv` is a Haxe library binding OpenCV 2.4.13.7 through hxcpp CFFI. The supported consumer target is Linux x86_64 C++, with OpenCV and the wrapper statically linked into the consumer executable. Compatible system libraries are still needed.
 
-- Consumer applications supply their own `main` and use `-lib spilehx-opencv`. `haxelib.json` declares the package and hxcpp dependency; `extraParams.hxml` invokes `cv.Build.configure()`.
-- `cv/Build.hx` rejects unsupported targets, defines `HXCPP_M64`, and adds the `native/Linux64/Build.xml` include to `cv.NativeLibrary` through build metadata. Display/no-output compilation skips this setup.
+- Consumer applications supply their own `main` and use `-lib spilehx-opencv`. `haxelib.json` declares the package, `src` class path, and hxcpp dependency; `extraParams.hxml` invokes `spilehx.cv.Build.configure()`.
+- `src/spilehx/cv/Build.hx` rejects unsupported targets, defines `HXCPP_M64`, and adds the `native/Linux64/Build.xml` include to `spilehx.cv.NativeLibrary` through build metadata. Display/no-output compilation skips this setup.
 - `make` delegates to `package-haxelib.sh`, the native build/package entry point. `build-lib.hxml` invokes only the wrapper build using `.env` paths.
-- `build.hxml`, `build_neko.hxml`, and `build_cpp.hxml` reference `samples/Sample1`, which is absent in this checkout. The Neko branches remaining in source are not the supported package path.
+- The Neko branches remaining in source are not the supported package path.
 
 ## Code locations
 
 | Haxe API | Native implementation | Responsibility |
 | --- | --- | --- |
-| `cv/Core.hx`, `cv/core/` | `src/core.cpp`, `include/core.h` | Images, matrices, geometry, scalars, array operations, drawing, fonts |
-| `cv/ImgProc.hx` | `src/imgproc.cpp`, `include/imgproc.h` | Image processing, filters, transforms, morphology |
-| `cv/HighGUI.hx`, `cv/highgui/Capture.hx` | `src/highgui.cpp`, `include/highgui.h` | Image IO, windows, callbacks, file capture |
-| `cv/Video.hx` | `src/video.cpp`, `include/video.h` | Optical flow, including array output marshalling |
-| `cv/Features2D.hx`, `cv/features2d/` | `src/features2d.cpp`, `include/features2d.h` | BRISK, GFFT, keypoints |
-| `cv/NonFree.hx`, `cv/nonfree/` | `src/nonfree.cpp`, `include/nonfree.h` | SIFT and SURF |
+| `src/spilehx/cv/Core.hx`, `src/spilehx/cv/core/` | `cpp/core.cpp`, `cpp/core.h` | Images, matrices, geometry, scalars, array operations, drawing, fonts |
+| `src/spilehx/cv/ImgProc.hx` | `cpp/imgproc.cpp`, `cpp/imgproc.h` | Image processing, filters, transforms, morphology |
+| `src/spilehx/cv/HighGUI.hx`, `src/spilehx/cv/highgui/Capture.hx` | `cpp/highgui.cpp`, `cpp/highgui.h` | Image IO, windows, callbacks, file capture |
+| `src/spilehx/cv/Video.hx` | `cpp/video.cpp`, `cpp/video.h` | Optical flow, including array output marshalling |
+| `src/spilehx/cv/Features2D.hx`, `src/spilehx/cv/features2d/` | `cpp/features2d.cpp`, `cpp/features2d.h` | BRISK, GFFT, keypoints |
+| `src/spilehx/cv/NonFree.hx`, `src/spilehx/cv/nonfree/` | `cpp/nonfree.cpp`, `cpp/nonfree.h` | SIFT and SURF |
 
-`cv/NativeBinding.hx` stores opaque native handles and supplies null-aware handle/array conversions. `cv/Macros.hx` generates facade methods. `include/utils.h` centralizes CFFI value conversions, property/constant macros, and finalizer helpers. `src/main.cpp` initializes all modules' native kinds.
+`src/spilehx/cv/NativeBinding.hx` stores opaque native handles and supplies null-aware handle/array conversions. `src/spilehx/cv/Macros.hx` generates facade methods. `cpp/utils.h` centralizes CFFI value conversions, property/constant macros, and finalizer helpers. `cpp/main.cpp` initializes all modules' native kinds.
 
 ## Calls, data, and lifetime
 
 1. A facade method calls its module's `load()` with a primitive name and arity. The loader prefixes names as `hx_cv_<module>_<operation>` in library `opencv`.
-2. On the first load, `cv/NativeLibrary.hx` calls `hx_opencv_entry()` before `cpp.Lib.load()`. That entry allocates the kinds used to identify and validate native objects.
-3. Classes implementing `cv.Macros.CvProcs` use `@:CvProc` to generate public static inline methods. Bodyless declarations get argument unwrapping, a native call, and return wrapping through the result type's `cvt()`. Explicit bodies handle special conversions. Generated null checks and `@:CvCheck` checks are debug-only.
-4. C++ primitives extract CFFI values, call OpenCV, and return values or update supplied destinations. `cv.Core.Arr` aliases `NativeBinding`; image/matrix compatibility is handled by the native operation rather than a distinct Haxe array hierarchy.
+2. On the first load, `src/spilehx/cv/NativeLibrary.hx` calls `hx_opencv_entry()` before `cpp.Lib.load()`. That entry allocates the kinds used to identify and validate native objects.
+3. Classes implementing `spilehx.cv.Macros.CvProcs` use `@:CvProc` to generate public static inline methods. Bodyless declarations get argument unwrapping, a native call, and return wrapping through the result type's `cvt()`. Explicit bodies handle special conversions. Generated null checks and `@:CvCheck` checks are debug-only.
+4. C++ primitives extract CFFI values, call OpenCV, and return values or update supplied destinations. `spilehx.cv.Core.Arr` aliases `NativeBinding`; image/matrix compatibility is handled by the native operation rather than a distinct Haxe array hierarchy.
 
 `Mat` wraps `CvMat`, and `Image` wraps `IplImage`; feature implementations bridge these to `cv::Mat` with `cv::cvarrToMat`. Algorithms often receive caller-created destination objects. Feature detection and pyramidal optical flow explicitly marshal output arrays and wrap newly added native elements; follow these manual bodies for array outputs because the macro does not generate array-return conversion.
 
@@ -45,8 +45,8 @@ Owned handles use CFFI GC finalizers (`cvReleaseMat`, `cvReleaseImage`, `cvRelea
 
 ## Extending the bindings
 
-- Add an operation to the relevant Haxe facade and matching `src/<module>.cpp`. Keep primitive names and arities aligned with `DEFINE_PRIM`; multi-argument primitives use `DEFINE_PRIM_MULT` and loader arity `-1` (most facade loaders translate counts greater than five automatically).
+- Add an operation to the relevant Haxe facade and matching `cpp/<module>.cpp`. Keep primitive names and arities aligned with `DEFINE_PRIM`; multi-argument primitives use `DEFINE_PRIM_MULT` and loader arity `-1` (most facade loaders translate counts greater than five automatically).
 - For a wrapped type, follow neighboring `NativeBinding` subclasses or abstracts, including null-aware `cvt()`, native kind declarations/allocation, conversion helpers, and appropriate owned/borrowed lifetime handling.
-- A new native module also needs registration in `src/main.cpp` and a translation-unit entry in root `Build.xml`. Native changes require regenerating the packaged bundle; Haxe sources and archives must come from the same release.
+- A new native module also needs registration in `cpp/main.cpp` and a translation-unit entry in root `Build.xml`. Native changes require regenerating the packaged bundle; Haxe sources and archives must come from the same release.
 
 This map is based on static source/configuration inspection. Archive contents, runtime behavior, and platform/system-library compatibility were not verified; no build, application, or tests were run.
