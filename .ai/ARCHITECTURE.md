@@ -6,9 +6,9 @@ Implementation takes precedence if this map becomes outdated. See [working pract
 
 `spilehx-opencv` is a Haxe library binding OpenCV 2.4.13.7 through hxcpp CFFI. The supported consumer target is Linux x86_64 C++, with OpenCV and the wrapper statically linked into the consumer executable. Compatible system libraries are still needed.
 
-- Consumer applications supply their own `main` and use `-lib spilehx-opencv`. `haxelib.json` declares the package, `src` class path, and hxcpp dependency; `extraParams.hxml` invokes `spilehx.cv.Build.configure()`.
-- `src/spilehx/cv/Build.hx` rejects unsupported targets, defines `HXCPP_M64`, and adds the `native/Linux64/Build.xml` include to `spilehx.cv.NativeLibrary` through build metadata. Display/no-output compilation skips this setup.
-- `make` delegates to `package-haxelib.sh`, the native build/package entry point. `build-lib.hxml` invokes only the wrapper build using `.env` paths.
+- Consumer applications supply their own `main` and use `-lib spilehx-opencv`. `haxelib.json` declares the package, `src` class path, and hxcpp dependency; `extraParams.hxml` invokes `spilehx.build.Build.configure()`.
+- `src/spilehx/build/Build.hx` rejects unsupported targets, defines `HXCPP_M64`, and adds the `native/Linux64/Build.xml` include to `spilehx.build.NativeLibrary` through build metadata. Display/no-output compilation skips this setup.
+- `make` delegates to `package-haxelib.sh`, the native build/package entry point.
 - The Neko branches remaining in source are not the supported package path.
 
 ## Code locations
@@ -22,13 +22,13 @@ Implementation takes precedence if this map becomes outdated. See [working pract
 | `src/spilehx/cv/Features2D.hx`, `src/spilehx/cv/features2d/` | `cpp/features2d.cpp`, `cpp/features2d.h` | BRISK, GFFT, keypoints |
 | `src/spilehx/cv/NonFree.hx`, `src/spilehx/cv/nonfree/` | `cpp/nonfree.cpp`, `cpp/nonfree.h` | SIFT and SURF |
 
-`src/spilehx/cv/NativeBinding.hx` stores opaque native handles and supplies null-aware handle/array conversions. `src/spilehx/cv/Macros.hx` generates facade methods. `cpp/utils.h` centralizes CFFI value conversions, property/constant macros, and finalizer helpers. `cpp/main.cpp` initializes all modules' native kinds.
+`src/spilehx/build/NativeBinding.hx` stores opaque native handles and supplies null-aware handle/array conversions. `src/spilehx/build/Macros.hx` generates facade methods. `cpp/utils.h` centralizes CFFI value conversions, property/constant macros, and finalizer helpers. `cpp/main.cpp` initializes all modules' native kinds.
 
 ## Calls, data, and lifetime
 
 1. A facade method calls its module's `load()` with a primitive name and arity. The loader prefixes names as `hx_cv_<module>_<operation>` in library `opencv`.
-2. On the first load, `src/spilehx/cv/NativeLibrary.hx` calls `hx_opencv_entry()` before `cpp.Lib.load()`. That entry allocates the kinds used to identify and validate native objects.
-3. Classes implementing `spilehx.cv.Macros.CvProcs` use `@:CvProc` to generate public static inline methods. Bodyless declarations get argument unwrapping, a native call, and return wrapping through the result type's `cvt()`. Explicit bodies handle special conversions. Generated null checks and `@:CvCheck` checks are debug-only.
+2. On the first load, `src/spilehx/build/NativeLibrary.hx` calls `hx_opencv_entry()` before `cpp.Lib.load()`. That entry allocates the kinds used to identify and validate native objects.
+3. Classes implementing `spilehx.build.Macros.CvProcs` use `@:CvProc` to generate public static inline methods. Bodyless declarations get argument unwrapping, a native call, and return wrapping through the result type's `cvt()`. Explicit bodies handle special conversions. Generated null checks and `@:CvCheck` checks are debug-only.
 4. C++ primitives extract CFFI values, call OpenCV, and return values or update supplied destinations. `spilehx.cv.Core.Arr` aliases `NativeBinding`; image/matrix compatibility is handled by the native operation rather than a distinct Haxe array hierarchy.
 
 `Mat` wraps `CvMat`, and `Image` wraps `IplImage`; feature implementations bridge these to `cv::Mat` with `cv::cvarrToMat`. Algorithms often receive caller-created destination objects. Feature detection and pyramidal optical flow explicitly marshal output arrays and wrap newly added native elements; follow these manual bodies for array outputs because the macro does not generate array-return conversion.

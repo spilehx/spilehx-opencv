@@ -1,14 +1,15 @@
 package spilehx.cv;
 
+import spilehx.build.NativeBinding;
 #if cpp
-import spilehx.cv.NativeLibrary as Lib;
+import spilehx.build.NativeLibrary as Lib;
 #else
 import neko.Lib;
 #end
 import spilehx.cv.core.*;
 import spilehx.cv.core.Scalar.RGB;
 
-import spilehx.cv.Macros;
+import spilehx.build.Macros;
 
 typedef Arr = NativeBinding; // Image|Mat|Seq?
 

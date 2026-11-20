@@ -1,5 +1,6 @@
 package spilehx.cv.nonfree;
 
+import spilehx.build.NativeBinding;
 import spilehx.cv.Core.Arr;
 import spilehx.cv.features2d.KeyPoint;
 

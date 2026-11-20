@@ -6,12 +6,12 @@ import spilehx.cv.core.Mat;
 import spilehx.cv.highgui.*;
 
 #if cpp
-import spilehx.cv.NativeLibrary as Lib;
+import spilehx.build.NativeLibrary as Lib;
 #else
 import neko.Lib;
 #end
 
-import spilehx.cv.Macros;
+import spilehx.build.Macros;
 
 class HighGUI implements CvProcs {
     static inline function load(n:String, p:Int=0):Dynamic

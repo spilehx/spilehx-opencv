@@ -1,4 +1,4 @@
-package spilehx.cv;
+package spilehx.build;
 
 @:cppFileCode('extern "C" void hx_opencv_entry();')
 class NativeLibrary {

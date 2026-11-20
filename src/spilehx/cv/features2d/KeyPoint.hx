@@ -1,5 +1,6 @@
 package spilehx.cv.features2d;
 
+import spilehx.build.NativeBinding;
 import spilehx.cv.core.Point2D32f;
 
 class KeyPoint extends NativeBinding {

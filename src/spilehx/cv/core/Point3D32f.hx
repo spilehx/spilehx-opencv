@@ -1,5 +1,7 @@
 package spilehx.cv.core;
 
+import spilehx.build.NativeBinding;
+
 class Point3D32f extends NativeBinding {
     @:allow(spilehx.cv)
     function new(nativeObject:Dynamic) {

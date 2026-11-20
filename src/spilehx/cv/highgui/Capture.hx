@@ -1,5 +1,7 @@
 package spilehx.cv.highgui;
 
+import spilehx.build.NativeBinding;
+
 abstract Capture(NativeBinding) from NativeBinding to NativeBinding {
     @:allow(spilehx.cv)
     inline function new(x:Dynamic) this = x;

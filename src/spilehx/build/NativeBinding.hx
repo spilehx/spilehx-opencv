@@ -1,4 +1,4 @@
-package spilehx.cv;
+package spilehx.build;
 
 class NativeBinding {
     @:allow(spilehx.cv)

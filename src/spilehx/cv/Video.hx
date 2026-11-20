@@ -1,14 +1,15 @@
 package spilehx.cv;
 
+import spilehx.build.NativeBinding;
 #if cpp
-import spilehx.cv.NativeLibrary as Lib;
+import spilehx.build.NativeLibrary as Lib;
 #else
 import neko.Lib;
 #end
 import spilehx.cv.core.*;
 import spilehx.cv.Core;
 
-import spilehx.cv.Macros;
+import spilehx.build.Macros;
 
 class Video implements CvProcs {
     @:allow(spilehx.cv.video)

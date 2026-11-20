@@ -1,5 +1,7 @@
 package spilehx.cv.core;
 
+import spilehx.build.NativeBinding;
+
 abstract Font(NativeBinding) from NativeBinding to NativeBinding {
     @:allow(spilehx.cv)
     inline function new(x:Dynamic) this = x;

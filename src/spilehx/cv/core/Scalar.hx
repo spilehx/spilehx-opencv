@@ -1,5 +1,7 @@
 package spilehx.cv.core;
 
+import spilehx.build.NativeBinding;
+
 abstract Scalar(Scalar_) from Scalar_ to Scalar_ {
     @:allow(spilehx.cv)
     inline function new(x:Dynamic) {

@@ -1,10 +1,10 @@
-package spilehx.cv;
+package spilehx.build;
 
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
 
-@:autoBuild(spilehx.cv.Macros.CvProcsImpl.run())
+@:autoBuild(spilehx.build.Macros.CvProcsImpl.run())
 @:remove extern interface CvProcs {}
 
 
@@ -68,8 +68,8 @@ class CvProcsImpl {
             case TPath({name:"Array",params:[TPType(t)]}):
                 var e2 = targ(e, t);
                 if (e2 == null) e;
-                else macro NativeBinding.mapNative($e);
-            default: macro NativeBinding.native($e);
+                else macro spilehx.build.NativeBinding.mapNative($e);
+            default: macro spilehx.build.NativeBinding.native($e);
             }
         }
 
