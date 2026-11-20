@@ -2,6 +2,10 @@ package spilehx.cv.core;
 
 import spilehx.internal.NativeBinding;
 
+/**
+ * Mutable two-dimensional coordinates stored with double precision,
+ * created by `Core.point2D64f`.
+ */
 class Point2D64f extends NativeBinding {
     @:allow(spilehx.cv)
     function new(nativeObject:Dynamic) {

@@ -2,6 +2,9 @@ package spilehx.cv.core;
 
 import spilehx.internal.NativeBinding;
 
+/**
+ * Mutable two-dimensional integer coordinates, created by `Core.point`.
+ */
 class Point extends NativeBinding {
     @:allow(spilehx.cv)
     function new(nativeObject:Dynamic) {

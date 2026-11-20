@@ -2,6 +2,9 @@ package spilehx.cv.core;
 
 import spilehx.internal.NativeBinding;
 
+/**
+ * Mutable integer dimensions, created by `Core.size`.
+ */
 class Size extends NativeBinding {
     @:allow(spilehx.cv)
     function new(nativeObject:Dynamic) {

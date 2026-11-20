@@ -4,6 +4,10 @@ import spilehx.internal.NativeBinding;
 import spilehx.cv.core.CVBuffer;
 import spilehx.cv.core.Size;
 
+/**
+ * Native OpenCV image with read-only layout properties and mutable pixel data.
+ * Use `Core.createImage` to allocate an image or `HighGUI.loadImage` to load one.
+ */
 class Image extends NativeBinding {
     @:allow(spilehx.cv)
     function new(nativeObject:Dynamic) {
@@ -14,16 +18,35 @@ class Image extends NativeBinding {
         return if (x == null) null else new Image(x);
     }
 
+    /**
+     * Buffer view of the pixel storage without copying. Keep this image and any
+     * owner of its storage alive while using the view.
+     */
     public var raw(get, never):CVBuffer;
     inline function get_raw():CVBuffer return Core.load("Image_get_raw", 1)(nativeObject);
 
     public var nChannels(get,never):Int;
+    /**
+     * Pixel component depth encoded with the `Core.IPL_DEPTH_*` constants.
+     */
     public var depth    (get,never):Int;
+    /**
+     * Storage order: 0 for interleaved channels, 1 for separate channel planes.
+     */
     public var dataOrder(get,never):Int;
+    /**
+     * Image origin: 0 for top-left, 1 for bottom-left.
+     */
     public var origin   (get,never):Int;
     public var width    (get,never):Int;
     public var height   (get,never):Int;
+    /**
+     * Size of the image data in bytes, including row padding.
+     */
     public var imageSize(get,never):Int;
+    /**
+     * Distance in bytes between consecutive image rows, including padding.
+     */
     public var widthStep(get,never):Int;
 
     inline function get_nChannels():Int { return Core.load("Image_get_nChannels", 1)(this.nativeObject); }

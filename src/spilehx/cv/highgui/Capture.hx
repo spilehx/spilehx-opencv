@@ -2,6 +2,10 @@ package spilehx.cv.highgui;
 
 import spilehx.internal.NativeBinding;
 
+/**
+ * Native video capture handle opened by `HighGUI.captureFromFile`.
+ * Keep it alive while using frames borrowed from the capture.
+ */
 abstract Capture(NativeBinding) from NativeBinding to NativeBinding {
     @:allow(spilehx.cv)
     inline function new(x:Dynamic) this = x;

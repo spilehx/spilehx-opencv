@@ -2,6 +2,10 @@ package spilehx.cv.core;
 
 import spilehx.internal.NativeBinding;
 
+/**
+ * Mutable four-component scalar, created by `Core.scalar` or its color helpers.
+ * Components are accessed with zero-based indices from 0 through 3.
+ */
 abstract Scalar(Scalar_) from Scalar_ to Scalar_ {
     @:allow(spilehx.cv)
     inline function new(x:Dynamic) {
@@ -13,9 +17,20 @@ abstract Scalar(Scalar_) from Scalar_ to Scalar_ {
     }
 
 
+    /**
+     * Reads a component using method or array access syntax.
+     * @param i Component index from 0 through 3.
+     * @return The component value rounded to single precision by the native binding.
+     */
     @:arrayAccess public inline function get(i:Int):Float {
         return Core.load("Scalar_get_i", 2)(this.nativeObject, i);
     }
+    /**
+     * Writes a component using method or array access syntax.
+     * @param i Component index from 0 through 3.
+     * @param x New component value.
+     * @return The assigned value rounded to single precision by the native binding.
+     */
     @:arrayAccess public inline function set(i:Int, x:Float):Float {
         return Core.load("Scalar_set_i", 3)(this.nativeObject, i, x);
     }
@@ -26,6 +41,10 @@ abstract Scalar(Scalar_) from Scalar_ to Scalar_ {
     }
 }
 
+/**
+ * Drawing color represented as a scalar in BGR order. Use `Core.rgb` to supply
+ * components in RGB order.
+ */
 typedef RGB = Scalar;
 
 class Scalar_ extends NativeBinding {

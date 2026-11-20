@@ -2,6 +2,9 @@ package spilehx.cv.core;
 
 import spilehx.internal.NativeBinding;
 
+/**
+ * Mutable dimensions stored with single precision, created by `Core.size2D32f`.
+ */
 class Size2D32f extends NativeBinding {
     @:allow(spilehx.cv)
     function new(nativeObject:Dynamic) {

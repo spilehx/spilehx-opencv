@@ -3,6 +3,9 @@ package spilehx.cv.features2d;
 import spilehx.internal.NativeBinding;
 import spilehx.cv.core.Point2D32f;
 
+/**
+ * Detected image feature and its scale, orientation, and detector response.
+ */
 class KeyPoint extends NativeBinding {
     @:allow(spilehx.cv)
     function new(nativeObject:Dynamic) {
@@ -15,13 +18,43 @@ class KeyPoint extends NativeBinding {
 
 
     var _pt:Point2D32f;
+    /**
+     * Shared mutable feature coordinates in pixels. Changing the coordinates
+     * updates this keypoint; the returned point keeps its keypoint alive.
+     */
     public var pt      (get,never):Point2D32f;
+    /**
+     * Diameter of the feature neighborhood in pixels.
+     */
     public var size    (get,never):Float;
+    /**
+     * Orientation in degrees, or -1 when no orientation is assigned.
+     */
     public var angle   (get,never):Float;
+    /**
+     * Detector response used to rank feature strength.
+     */
     public var response(get,never):Float;
+    /**
+     * Pyramid octave in which the feature was detected.
+     */
     public var octave  (get,never):Int;
+    /**
+     * Application-defined feature identifier, or -1 when unassigned.
+     */
     public var class_id(get,never):Int;
 
+    /**
+     * Creates a keypoint with the supplied feature attributes.
+     * @param x Horizontal coordinate in pixels.
+     * @param y Vertical coordinate in pixels.
+     * @param size Feature neighborhood diameter in pixels.
+     * @param angle Orientation in degrees, or -1 when unassigned.
+     * @param response Detector response measuring feature strength.
+     * @param octave Pyramid octave of detection.
+     * @param class_id Application-defined identifier, defaulting to -1.
+     * @return A new keypoint.
+     */
     public static inline function make(x:Float, y:Float, size:Float, angle:Float, response:Float, octave:Int, class_id:Int=-1):KeyPoint {
         return KeyPoint.cvt(Features2D.load("KeyPoint_make", 7)(x, y, size, angle, response, octave, class_id));
     }

@@ -7,8 +7,17 @@ import spilehx.cv.Core;
 
 import spilehx.internal.Macros;
 
+/**
+ * Native morphology kernel created by `ImgProc.createStructuringElementEx`.
+ */
 typedef ConvKernel = NativeBinding;
 
+/**
+ * Filtering, morphology, color conversion, and feature detection.
+ * Destination and scratch arrays must be allocated by the caller with dimensions
+ * and types suitable for the selected operation. Optional masks select nonzero
+ * pixels; null means no mask.
+ */
 class ImgProc implements CvProcs {
     @:allow(spilehx.cv.imgproc)
     static inline function load(n:String, p:Int=-1):Dynamic
@@ -194,39 +203,147 @@ class ImgProc implements CvProcs {
     // -------------------------
     // Image processing methods.
     // -------------------------
+    /**
+     * Applies edge-preserving bilateral smoothing into dst.
+     * @param d Pixel neighborhood diameter; nonpositive values derive it from sigmaSpace.
+     * @param sigmaColor Filter sigma in color space.
+     * @param sigmaSpace Filter sigma in coordinate space.
+     */
     @:CvProc function bilateralFilter(src:Arr, dst:Arr, d:Int, sigmaColor:Float, sigmaSpace:Float):Void;
+    /**
+     * Creates a morphology kernel with the supplied dimensions and anchor.
+     * @param shape SHAPE_* kernel shape.
+     * @param values Row-major kernel entries, required for SHAPE_CUSTOM with cols * rows entries.
+     * @return A new native structuring element.
+     */
     @:CvProc function createStructuringElementEx(cols:Int, rows:Int, anchorX:Int, anchorY:Int, shape:Int, ?values:Null<Array<Int>>):ConvKernel {
         @:CvCheck if (shape == SHAPE_CUSTOM && values == null) throw "values cannot be null when using SHAPE_CUSTOM";
         return NativeBinding.generic(load("createStructuringElementEx", 6)(cols, rows, anchorX, anchorY, shape, values));
     }
 
+    /**
+     * Dilates src into dst for the requested iterations.
+     * @param element Structuring element, or null for the default 3-by-3 rectangle.
+     */
     @:CvProc function dilate(src:Arr, dst:Arr, ?element:Null<ConvKernel>, iterations:Int=1):Void;
+    /**
+     * Erodes src into dst for the requested iterations.
+     * @param element Structuring element, or null for the default 3-by-3 rectangle.
+     */
     @:CvProc function erode (src:Arr, dst:Arr, ?element:Null<ConvKernel>, iterations:Int=1):Void;
+    /**
+     * Equalizes the histogram of an unsigned 8-bit single-channel source into dst.
+     */
     @:CvProc function equalizeHist(src:Arr, dst:Arr):Void;
+    /**
+     * Applies local histogram equalization with interpolated window mappings.
+     * Source and destination must be unsigned 8-bit single-channel matrices with
+     * matching dimensions and tightly packed rows.
+     * @param windowRows Positive height of each histogram window, capped at the source height.
+     * @param windowCols Positive width of each histogram window, capped at the source width.
+     * @param limit Histogram bin clipping limit as a fraction of the window pixel count.
+     * @param cutoff Redistribution cutoff as a fraction of the window pixel count.
+     */
     @:CvProc function equalizeHistAdaptive(src:Mat, dst:Mat, windowRows:Int, windowCols:Int, limit:Float=1.0, cutoff:Float=1.0):Void;
+    /**
+     * Applies kernel correlation into dst.
+     * @param anchor Kernel anchor, or null to use the kernel center.
+     */
     @:CvProc(anchor=Core.point(-1,-1)) function filter2D(src:Arr, dst:Arr, kernel:Mat, ?anchor:Null<Point>):Void;
+    /**
+     * Applies Gaussian smoothing into dst.
+     * @param ksize Kernel dimensions; zero dimensions are derived from sigma values.
+     * @param sigmaX Horizontal Gaussian sigma.
+     * @param sigmaY Vertical sigma, or 0 to use sigmaX.
+     * @param borderType BORDER_* extrapolation mode, defaulting to BORDER_DEFAULT.
+     */
     @:CvProc(borderType=BORDER_DEFAULT) function gaussianBlur(src:Arr, dst:Arr, ksize:Size, sigmaX:Float, sigmaY:Float=0.0, ?borderType:Null<Int>):Void;
+    /**
+     * Applies the selected threshold operation into dst.
+     * @param thresholdType THRESH_* operation and optional automatic-threshold flag.
+     * @return The threshold actually used, including an automatically selected value.
+     */
     @:CvProc function threshold(src:Arr, dst:Arr, threshold:Float, maxValue:Float, thresholdType:Int):Float;
+    /**
+     * Applies a median filter into dst.
+     * @param ksize Odd kernel size greater than 1.
+     */
     @:CvProc function medianBlur(src:Arr, dst:Arr, ksize:Int):Void;
+    /**
+     * Applies a compound morphology operation into dst.
+     * @param tmp Scratch array required for MOP_GRADIENT and for in-place MOP_TOPHAT or MOP_BLACKHAT.
+     * @param element Structuring element for the operation.
+     * @param operation MOP_* operation.
+     * @param iterations Number of erosion or dilation iterations.
+     */
     @:CvProc function morphologyEx(src:Arr, dst:Arr, tmp:Null<Arr>, element:ConvKernel, operation:Int, iterations:Int=1) {
         @:CvCheck(tmp) if (tmp == null && (operation == MOP_GRADIENT)) throw "tmp Arr required for MOP_GRADIENT";
         @:CvCheck(tmp) if (tmp == null && src == dst && (operation == MOP_TOPHAT || operation == MOP_BLACKHAT)) throw "tmp Arr required for in-place MOP_TOPHAT/BLACKHAT";
         load("morphologyEx", 6)(src.nativeObject, dst.nativeObject, NativeBinding.native(tmp), element.nativeObject, operation, iterations);
     }
 
+    /**
+     * Applies Gaussian smoothing and downsamples into the next pyramid level in dst.
+     */
     @:CvProc function pyrDown(src:Arr, dst:Arr):Void;
+    /**
+     * Applies the selected legacy smoothing operation into dst.
+     * @param smoothType BLUR_NO_SCALE, BLUR, GAUSSIAN, MEDIAN, or BILATERAL; defaults to GAUSSIAN.
+     * @param param1 First operation-specific parameter, typically kernel width.
+     * @param param2 Second operation-specific parameter, typically kernel height.
+     * @param param3 Third operation-specific parameter, such as Gaussian horizontal sigma.
+     * @param param4 Fourth operation-specific parameter, such as Gaussian vertical sigma.
+     */
     @:CvProc(smoothType=GAUSSIAN) function smooth(src:Arr, dst:Arr, ?smoothType:Null<Int>, param1:Int=3, param2:Int=0, param3:Int=0, param4:Int=0):Void;
 
+    /**
+     * Writes the Laplacian into dst using the selected derivative aperture size.
+     */
     @:CvProc function laplace (src:Arr,   dst:Arr, apertureSize:Int=3):Void;
+    /**
+     * Writes a Sobel derivative into dst.
+     * @param xorder Horizontal derivative order.
+     * @param yorder Vertical derivative order.
+     * @param apertureSize Derivative kernel aperture.
+     */
     @:CvProc function sobel   (src:Arr,   dst:Arr, xorder:Int, yorder:Int, apertureSize:Int=3):Void;
+    /**
+     * Computes integral images into outputs with one extra row and column.
+     * @param sum Destination cumulative sums.
+     * @param sqsum Optional destination squared-value sums.
+     * @param tiltedSum Optional destination tilted integral image.
+     */
     @:CvProc function integral(image:Arr, sum:Arr, ?sqsum:Null<Arr>, ?tiltedSum:Null<Arr>):Void;
 
+    /**
+     * Converts src into dst using a color conversion constant such as BGR2GRAY.
+     */
     @:CvProc function cvtColor(src:Arr, dst:Arr, code:Int):Void;
+    /**
+     * Computes distance from each nonzero source pixel to the nearest zero pixel.
+     * @param distanceType DIST_* distance metric, defaulting to DIST_L2.
+     * @param maskSize Distance-transform neighborhood size.
+     * @param mask Optional custom distance weights.
+     * @param labels Optional output labels identifying nearest zero components.
+     */
     @:CvProc(distanceType=DIST_L2) function distTransform(src:Arr, dst:Arr, ?distanceType:Null<Int>, maskSize:Int=3, ?mask:Null<Array<Float>>, ?labels:Null<Arr>):Void;
 
+    /**
+     * Adds image values into the floating-point sum accumulator at selected pixels.
+     */
     @:CvProc function acc        (image :Arr, sum   :Arr, ?mask:Null<Arr>):Void;
+    /**
+     * Adds squared image values into the floating-point sqsum accumulator.
+     */
     @:CvProc function squareAcc  (image :Arr, sqsum :Arr, ?mask:Null<Arr>):Void;
+    /**
+     * Adds elementwise image products into the floating-point acc accumulator.
+     */
     @:CvProc function multiplyAcc(image1:Arr, image2:Arr, acc:Arr,     ?mask:Null<Arr>):Void;
+    /**
+     * Updates the floating-point accumulator with `acc * (1 - alpha) + image * alpha`.
+     * @param alpha Weight assigned to the current image.
+     */
     @:CvProc function runningAvg (image :Arr, acc   :Arr, alpha:Float, ?mask:Null<Arr>):Void;
 
     // -------------------------
@@ -235,6 +352,21 @@ class ImgProc implements CvProcs {
     // Differs from C-API with maxCorners parameter laying a cap on the number of corners to detect
     // Corners are stored into the corners array (expanded as necessary) and this function
     // returns the number of found corners (<= maxCorners)
+    /**
+     * Detects strong corners, updating existing point objects and growing corners
+     * when needed. Only the first returned count are results; trailing entries remain.
+     * @param eigImage Scratch image for corner responses.
+     * @param tempImage Scratch image for intermediate calculations.
+     * @param corners Output corner positions in pixels.
+     * @param maxCorners Maximum number of corners to return.
+     * @param qualityLevel Minimum quality relative to the strongest corner.
+     * @param minDistance Minimum corner separation in pixels.
+     * @param mask Optional detection mask.
+     * @param blockSize Neighborhood size for corner estimation.
+     * @param useHarris Whether to use Harris corner detection.
+     * @param k Harris detector parameter, used when useHarris is true.
+     * @return Number of detected corners, at most maxCorners.
+     */
     @:CvProc function goodFeaturesToTrack(image:Arr, eigImage:Arr, tempImage:Arr, corners:Array<Point2D32f>, maxCorners:Int, qualityLevel:Float, minDistance:Float, ?mask:Null<Arr>, blockSize:Int=3, useHarris:Bool=false, k:Float=0.04):Int {
         var corns = NativeBinding.mapNative(corners);
         var ret = load("goodFeaturesToTrack", 11)(image.nativeObject, eigImage.nativeObject, tempImage.nativeObject, corns, maxCorners, qualityLevel, minDistance, NativeBinding.native(mask), blockSize, useHarris ? 1 : 0, k);

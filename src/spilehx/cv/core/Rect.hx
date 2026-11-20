@@ -2,6 +2,10 @@ package spilehx.cv.core;
 
 import spilehx.internal.NativeBinding;
 
+/**
+ * Mutable integer rectangle with origin `(x, y)` and dimensions `width` and
+ * `height`. Created by `Core.rect`.
+ */
 class Rect extends NativeBinding {
     @:allow(spilehx.cv)
     function new(nativeObject:Dynamic) {

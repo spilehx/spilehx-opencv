@@ -4,6 +4,9 @@ import spilehx.internal.NativeBinding;
 import spilehx.cv.Core.Arr;
 import spilehx.cv.features2d.KeyPoint;
 
+/**
+ * BRISK feature detector and descriptor extractor, created by `Features2D.brisk`.
+ */
 class BRISK extends NativeBinding {
     @:allow(spilehx.cv)
     function new(nativeObject:Dynamic) {

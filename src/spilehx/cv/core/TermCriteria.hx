@@ -2,6 +2,9 @@ package spilehx.cv.core;
 
 import spilehx.internal.NativeBinding;
 
+/**
+ * Mutable stopping criteria for iterative algorithms, created by `Core.termCriteria`.
+ */
 class TermCriteria extends NativeBinding {
     @:allow(spilehx.cv)
     function new(nativeObject:Dynamic) {
@@ -14,8 +17,17 @@ class TermCriteria extends NativeBinding {
 
 
 
+    /**
+     * Bitwise combination of `Core.TERMCRIT_ITER` and `Core.TERMCRIT_EPS`.
+     */
     public var type    (get,set):Int;
+    /**
+     * Iteration limit used when `Core.TERMCRIT_ITER` is enabled.
+     */
     public var max_iter(get,set):Int;
+    /**
+     * Convergence tolerance used when `Core.TERMCRIT_EPS` is enabled.
+     */
     public var epsilon (get,set):Float;
 
     inline function get_type    () { return Core.load("TermCriteria_get_type",     1)(nativeObject); }

@@ -2,6 +2,10 @@ package spilehx.cv.core;
 
 import spilehx.internal.NativeBinding;
 
+/**
+ * Mutable three-dimensional coordinates stored with double precision,
+ * created by `Core.point3D64f`.
+ */
 class Point3D64f extends NativeBinding {
     @:allow(spilehx.cv)
     function new(nativeObject:Dynamic) {

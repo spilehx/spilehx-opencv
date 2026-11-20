@@ -7,8 +7,17 @@ import spilehx.cv.core.Scalar.RGB;
 
 import spilehx.internal.Macros;
 
+/**
+ * Common native array handle accepted by operations on images and matrices.
+ */
 typedef Arr = NativeBinding; // Image|Mat|Seq?
 
+/**
+ * Array operations, allocation, and drawing for native OpenCV data.
+ * Operations with a destination write into caller-supplied storage. Optional masks
+ * select nonzero pixels; null means no mask. Image and matrix types must be
+ * compatible with the chosen OpenCV operation.
+ */
 class Core implements CvProcs {
     @:allow(spilehx.cv.core)
     static inline function load(n:String, p:Int=-1):Dynamic
@@ -61,12 +70,40 @@ class Core implements CvProcs {
         public static inline var _64FC3 = MAKETYPE(_64F,3);
         public static inline var _64FC4 = MAKETYPE(_64F,4);
 
+    /**
+     * @param N Channel count from 1 through 4.
+     * @return Unsigned 8-bit matrix type for the requested channel count.
+     */
     public static inline function _8UC (N:Int) return [_8UC1,  _8UC2,  _8UC3,  _8UC4 ][N-1];
+    /**
+     * @param N Channel count from 1 through 4.
+     * @return Signed 8-bit matrix type for the requested channel count.
+     */
     public static inline function _8SC (N:Int) return [_8SC1,  _8SC2,  _8SC3,  _8SC4 ][N-1];
+    /**
+     * @param N Channel count from 1 through 4.
+     * @return Unsigned 16-bit matrix type for the requested channel count.
+     */
     public static inline function _16UC(N:Int) return [_16UC1, _16UC2, _16UC3, _16UC4][N-1];
+    /**
+     * @param N Channel count from 1 through 4.
+     * @return Signed 16-bit matrix type for the requested channel count.
+     */
     public static inline function _16SC(N:Int) return [_16SC1, _16SC2, _16SC3, _16SC4][N-1];
+    /**
+     * @param N Channel count from 1 through 4.
+     * @return Signed 32-bit matrix type for the requested channel count.
+     */
     public static inline function _32SC(N:Int) return [_32SC1, _32SC2, _32SC3, _32SC4][N-1];
+    /**
+     * @param N Channel count from 1 through 4.
+     * @return Single-precision matrix type for the requested channel count.
+     */
     public static inline function _32FC(N:Int) return [_32FC1, _32FC2, _32FC3, _32FC4][N-1];
+    /**
+     * @param N Channel count from 1 through 4.
+     * @return Double-precision matrix type for the requested channel count.
+     */
     public static inline function _64FC(N:Int) return [_64FC1, _64FC2, _64FC3, _64FC4][N-1];
 
     // -------------------------
@@ -135,91 +172,247 @@ class Core implements CvProcs {
     // -------------------------
     // Matrix/Image mixed functions.
     // -------------------------
+    /**
+     * Writes the per-component absolute difference between two arrays into dst.
+     */
     @:CvProc function absDiff (src1:Arr, src2:Arr,     dst:Arr):Void;
+    /**
+     * Writes the absolute difference between src and a per-channel scalar into dst.
+     */
     @:CvProc function absDiffS(src :Arr, value:Scalar, dst:Arr):Void;
 
     @:CvProc function add        (src1:Arr, src2:Arr,     dst:Arr,  ?mask:Null<Arr>):Void;
     @:CvProc function addS       (src :Arr, value:Scalar, dst:Arr,  ?mask:Null<Arr>):Void;
+    /**
+     * Writes `src1 * alpha + src2 * beta + gamma` into dst with destination-depth conversion.
+     */
     @:CvProc function addWeighted(src1:Arr, alpha:Float,  src2:Arr, beta:Float, gamma:Float, dst:Arr):Void;
+    /**
+     * Writes `src1 * scale + src2` into dst, using scale as a per-channel scalar.
+     */
     @:CvProc function scaleAdd   (src1:Arr, scale:Scalar, src2:Arr, dst:Arr):Void;
 
     @:CvProc function and (src1:Arr, src2:Arr,     dst:Arr, ?mask:Null<Arr>):Void;
     @:CvProc function andS(src :Arr, value:Scalar, dst:Arr, ?mask:Null<Arr>):Void;
 
+    /**
+     * @return Per-channel mean over the selected elements.
+     */
     @:CvProc function avg   (arr:Arr, ?mask:Null<Arr>):Scalar;
+    /**
+     * Writes per-channel means and standard deviations into mean and stdDev.
+     */
     @:CvProc function avgSdv(arr:Arr, mean:Scalar, stdDev:Scalar, ?mask:Null<Arr>):Void;
 
+    /**
+     * Converts Cartesian components into polar outputs.
+     * @param magnitude Destination magnitudes, or null to omit them.
+     * @param angle Destination angles, or null to omit them.
+     * @param angleInDegrees Whether angles use degrees instead of radians.
+     */
     @:CvProc function cartToPolar(x:Arr, y:Arr, magnitude:Null<Arr>, angle:Null<Arr>, angleInDegrees:Bool=false):Void;
 
+    /**
+     * Writes a comparison mask into dst using a `CMP_*` operator: 255 for true, 0 for false.
+     */
     @:CvProc function cmp (src1:Arr, src2:Arr,    dst:Arr, cmpOp:Int):Void;
+    /**
+     * Compares each source element with value using a `CMP_*` operator, writing 255 or 0 into dst.
+     */
     @:CvProc function cmpS(src :Arr, value:Float, dst:Arr, cmpOp:Int):Void;
 
+    /**
+     * Converts src into the depth of the preallocated destination.
+     */
     @:CvProc function convert        (src:Arr, dst:Arr):Void convertScale(src, dst);
+    /**
+     * Writes `src * scale + shift` into dst, converting to the destination depth.
+     */
     @:CvProc function convertScale   (src:Arr, dst:Arr, scale:Float=1, shift:Float=0):Void;
+    /**
+     * Scales, shifts, and takes absolute values, writing an unsigned 8-bit destination.
+     */
     @:CvProc function convertScaleAbs(src:Arr, dst:Arr, scale:Float=1, shift:Float=0):Void;
 
     @:CvProc function copy(src:Arr, dst:Arr, ?mask:Null<Arr>):Void;
 
+    /**
+     * @param arr Single-channel input array.
+     * @return Number of nonzero elements.
+     */
     @:CvProc function countNonZero(arr:Arr):Int;
 
+    /**
+     * Writes a discrete cosine transform into dst using `DCT_*` flags.
+     */
     @:CvProc function DCT(src:Arr, dst:Arr, flags:Int):Void;
+    /**
+     * Writes a discrete Fourier transform into dst using `DFT_*` flags.
+     * @param nonzeroRows Number of nonzero input rows, or 0 to process all rows.
+     */
     @:CvProc function DFT(src:Arr, dst:Arr, flags:Int, nonzeroRows:Int=0):Void;
 
+    /**
+     * @return Determinant of a square single-channel matrix.
+     */
     @:CvProc function det(mat:Arr):Float;
 
+    /**
+     * Writes the elementwise product of src1 and src2, multiplied by scale, into dst.
+     */
     @:CvProc function mul(src1:Arr, src2:Arr, dst:Arr, scale:Float=1):Void;
     @:CvProc function div(src1:Arr, src2:Arr, dst:Arr, scale:Float=1):Void;
 
+    /**
+     * @return Sum of the products of corresponding array components.
+     */
     @:CvProc function dotProduct(src1:Arr, src2:Arr):Float;
 
+    /**
+     * @param idx0 Zero-based linear element index.
+     * @return All channel values of the selected element.
+     */
     @:CvProc function get1D(arr:Arr, idx0:Int):Scalar;
+    /**
+     * @param idx0 Zero-based row index.
+     * @param idx1 Zero-based column index.
+     * @return All channel values of the selected element.
+     */
     @:CvProc function get2D(arr:Arr, idx0:Int, idx1:Int):Scalar;
+    /**
+     * @return All channel values at the supplied zero-based three-dimensional indices.
+     */
     @:CvProc function get3D(arr:Arr, idx0:Int, idx1:Int, idx2:Int):Scalar;
+    /**
+     * @param idx Zero-based index for each array dimension.
+     * @return All channel values of the selected element.
+     */
     @:CvProc function getND(arr:Arr, idx:Array<Int>):Scalar;
 
+    /**
+     * Initializes submat as a view of the columns in `[startCol, endCol)`.
+     * @param submat Destination matrix header; data is shared with arr.
+     * @return A wrapper for the initialized header. Keep the source storage alive.
+     */
     @:CvProc function getCols   (arr:Arr, submat:Mat, startCol:Int, endCol:Int):Mat;
+    /**
+     * Initializes submat as a view of rows in `[startRow, endRow)`.
+     * @param submat Destination matrix header; data is shared with arr.
+     * @param deltaRow Step between selected rows.
+     * @return A wrapper for the initialized header. Keep the source storage alive.
+     */
     @:CvProc function getRows   (arr:Arr, submat:Mat, startRow:Int, endRow:Int, deltaRow:Int=1):Mat;
+    /**
+     * Initializes submat as a view of a diagonal without copying data.
+     * @param diag Diagonal offset: 0 for main, positive above, negative below.
+     * @return A wrapper for the initialized header. Keep the source storage alive.
+     */
     @:CvProc function getDiag   (arr:Arr, submat:Mat, diag:Int ):Mat;
+    /**
+     * Initializes submat as a view of rect without copying data.
+     * @return A wrapper for the initialized header. Keep arr and submat alive while using it.
+     */
     @:CvProc function getSubRect(arr:Arr, submat:Mat, rect:Rect):Mat;
 
+    /**
+     * @return Element type encoding the array depth and channel count.
+     */
     @:CvProc function getElemType(arr:Arr):Int;
     @:CvProc function getSize    (arr:Arr):Size;
 
+    /**
+     * @param idx0 Zero-based linear element index into a single-channel array.
+     * @return The element converted to Float.
+     */
     @:CvProc function getReal1D(arr:Arr, idx0:Int):Float;
+    /**
+     * @param idx0 Zero-based row index into a single-channel array.
+     * @param idx1 Zero-based column index.
+     * @return The element converted to Float.
+     */
     @:CvProc function getReal2D(arr:Arr, idx0:Int, idx1:Int):Float;
+    /**
+     * @return The single-channel element at the supplied zero-based indices, converted to Float.
+     */
     @:CvProc function getReal3D(arr:Arr, idx0:Int, idx1:Int, idx2:Int):Float;
+    /**
+     * @param idx Zero-based index for each dimension of a single-channel array.
+     * @return The element converted to Float.
+     */
     @:CvProc function getRealND(arr:Arr, idx:Array<Int>):Float;
 
     @:CvProc function magnitude(x:Arr, y:Arr, mag:Arr):Void;
+    /**
+     * Interleaves up to four single-channel arrays into dst.
+     * @param mv Source channel arrays in destination channel order.
+     */
     @:CvProc function merge(mv:Array<Arr>, dst:Arr):Void {
         load("merge", 2)(NativeBinding.mapNative(mv), dst.nativeObject);
     }
 
     @:CvProc function set(arr:Arr, value:Scalar, ?mask:Null<Arr>):Void;
 
+    /**
+     * Separates src into up to four caller-allocated single-channel destinations.
+     * @param mv Destination channel arrays; this call does not allocate or resize them.
+     */
     @:CvProc function split(src:Arr, mv:Array<Arr>):Void {
         load("split", 2)(src.nativeObject, NativeBinding.mapNative(mv));
     }
     @:CvProc function sub(src1:Arr, src2:Arr, dst:Arr, ?mask:Null<Arr>);
+    /**
+     * Writes the direction of Cartesian vectors into angle.
+     * @param angleInDegrees Whether output angles use degrees instead of radians.
+     */
     @:CvProc function phase(x:Arr, y:Arr, angle:Arr, angleInDegrees:Bool=false):Void;
+    /**
+     * Converts polar components into caller-supplied Cartesian outputs.
+     * @param angle Magnitude array, passed as the first polar component by this binding.
+     * @param phase Angular component array.
+     * @param angleInDegrees Whether phase values use degrees instead of radians.
+     */
     @:CvProc function polarToCart(angle:Arr, phase:Arr, x:Arr, y:Arr, angleInDegrees:Bool=false):Void;
 
     // -------------------------
     // Image specific functions.
     // -------------------------
+    /**
+     * @return An independent copy of the image and its pixel data.
+     */
     @:CvProc function cloneImage(image:Image):Image;
 
     // -------------------------
     // Matrix specific functions.
     // -------------------------
+    /**
+     * @param mat Single-channel floating-point matrix.
+     * @param i Zero-based row index.
+     * @param j Zero-based column index.
+     * @return The matrix element.
+     */
     @:CvProc function mGet(mat:Mat, i:Int, j:Int):Float;
+    /**
+     * Writes an element in a single-channel floating-point matrix.
+     * @param i Zero-based row index.
+     * @param j Zero-based column index.
+     * @return The supplied value.
+     */
     @:CvProc function mSet(mat:Mat, i:Int, j:Int, value:Float):Float;
 
+    /**
+     * @return An independent copy of the matrix and its data.
+     */
     @:CvProc function cloneMat(mat:Mat):Mat;
 
     // -------------------------
     // TermCriteria specific functions.
     // -------------------------
+    /**
+     * Normalizes stopping criteria using defaults for disabled criteria.
+     * @param defEps Default convergence tolerance.
+     * @param defMaxIter Default iteration limit.
+     * @return New normalized criteria; the input object is unchanged.
+     */
     @:CvProc function checkTermCriteria(criteria:TermCriteria, defEps:Float, defMaxIter:Int):TermCriteria;
 
     // -------------------------
@@ -235,6 +428,12 @@ class Core implements CvProcs {
     @:CvProc(Scalar)       function scalar      (x:Float=0, y:Float=0, z:Float=0, w:Float=0):Scalar;
     @:CvProc(Size)         function size        (w:Int  =0, h:Int  =0):Size;
     @:CvProc(Size2D32f)    function size2D32f   (w:Float=0, h:Float=0):Size2D32f;
+    /**
+     * @param type Bitwise combination of TERMCRIT_ITER and TERMCRIT_EPS.
+     * @param maxIter Iteration limit.
+     * @param eps Convergence tolerance.
+     * @return New stopping criteria.
+     */
     @:CvProc(TermCriteria) function termCriteria(type:Int,  maxIter:Int, eps:Float):TermCriteria;
 
     // -------------------------
@@ -242,38 +441,110 @@ class Core implements CvProcs {
     // Change from C-API, no release methods exist (GC'ed)
     //                  , createFont instead of initFont (haxe semantics)
     // -------------------------
+    /**
+     * Allocates an image header and pixel storage.
+     * @param depth Component depth selected from IPL_DEPTH_*.
+     * @param channels Number of color channels.
+     * @return A new image with uninitialized pixel data.
+     */
     @:CvProc function createImage(size:Size,    depth:Int,       channels:Int):Image;
+    /**
+     * Allocates a matrix header and data storage.
+     * @param type Matrix depth and channel type, such as _32FC1.
+     * @return A new matrix with uninitialized data.
+     */
     @:CvProc function createMat  (rows:Int,     cols :Int,       type    :Int):Mat;
+    /**
+     * Creates a font for putText.
+     * @param fontFace FONT_HERSHEY_* face, optionally combined with FONT_ITALIC.
+     * @param hscale Horizontal character scale.
+     * @param vscale Vertical character scale.
+     * @param shear Character slant.
+     * @param thickness Stroke thickness in pixels.
+     * @param lineType Line style, including AA for antialiasing.
+     * @return A new font.
+     */
     @:CvProc function createFont (fontFace:Int, hscale:Float=1,  vscale:Float=1, shear:Float=0, thickness:Int=1, lineType:Int=8):Font;
 
 
+    /**
+     * @param depth Component depth selected from IPL_DEPTH_*.
+     * @return An image header without pixel storage; use createData to allocate it.
+     */
     @:CvProc function createImageHeader(size:Size, depth:Int, channels:Int):Image;
+    /**
+     * @param type Matrix depth and channel type, such as _32FC1.
+     * @return A matrix header without data storage; use createData to allocate it.
+     */
     @:CvProc function createMatHeader  (rows:Int,  cols :Int, type    :Int):Mat;
+    /**
+     * Allocates data storage for an existing image or matrix header.
+     */
     @:CvProc function createData       (arr:Arr):Void;
 
     // --------------------------
     // Derived type constructors.
     // --------------------------
     // Scalar
+    /**
+     * @return A scalar with all four components set to v.
+     */
     @:CvProc function scalarAll (v:Float):Scalar return scalar(v, v, v, v);
+    /**
+     * @return A scalar with first component v and the remaining components zero.
+     */
     @:CvProc function realScalar(v:Float):Scalar return scalar(v, 0, 0, 0);
 
     // RGB (Scalar)
+    /**
+     * @return A grayscale drawing color with three components equal to v and a zero fourth component.
+     */
     @:CvProc function gray(v:Float=0)                      :RGB return scalar(v, v, v);
+    /**
+     * @return A drawing color stored in BGR order with a zero fourth component.
+     */
     @:CvProc function rgb (r:Float=0, g:Float=0, b:Float=0):RGB return scalar(b, g, r);
 
     // --------------------------
     // Drawing uilities
     // --------------------------
+    /**
+     * Draws a circle into img.
+     * @param thickness Stroke width, or FILLED to fill the circle.
+     * @param shift Number of fractional bits in center coordinates and radius.
+     */
     @:CvProc function circle   (img:Arr, center:Point, radius:Int, color:RGB, thickness:Int=1, lineType:Int=8, shift:Int=0):Void;
+    /**
+     * Draws a line segment into img.
+     * @param shift Number of fractional bits in the endpoint coordinates.
+     */
     @:CvProc function line     (img:Arr, pt1:Point,    pt2:Point,  color:RGB, thickness:Int=1, lineType:Int=8, shift:Int=0):Void;
+    /**
+     * Draws a rectangle between opposite corners into img.
+     * @param thickness Stroke width, or FILLED to fill the rectangle.
+     * @param shift Number of fractional bits in the corner coordinates.
+     */
     @:CvProc function rectangle(img:Arr, pt1:Point,    pt2:Point,  color:RGB, thickness:Int=1, lineType:Int=8, shift:Int=0):Void;
+    /**
+     * Draws text into img using font.
+     * @param org Origin of the text baseline.
+     */
     @:CvProc function putText  (img:Arr, text:String,  org:Point,  font:Font, color:RGB):Void;
 
     // --------------------------
     // General derived methods.
     // --------------------------
+    /**
+     * Initializes submat as a shared view of one column, as with getCols.
+     * @param col Zero-based column index.
+     * @return A wrapper for the initialized header.
+     */
     @:CvProc function getCol(arr:Arr, submat:Mat, col:Int):Mat return getCols(arr, submat, col, col+1);
+    /**
+     * Initializes submat as a shared view of one row, as with getRows.
+     * @param col Zero-based row index, despite the parameter name.
+     * @return A wrapper for the initialized header.
+     */
     @:CvProc function getRow(arr:Arr, submat:Mat, col:Int):Mat return getRows(arr, submat, col, col+1, 1);
 
 }

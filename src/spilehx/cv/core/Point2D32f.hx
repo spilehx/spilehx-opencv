@@ -2,6 +2,10 @@ package spilehx.cv.core;
 
 import spilehx.internal.NativeBinding;
 
+/**
+ * Mutable two-dimensional coordinates stored with single precision.
+ * Create independent points with `Core.point2D32f`.
+ */
 class Point2D32f extends NativeBinding {
     // Borrowed coordinates must keep their native owner alive.
     var owner:NativeBinding;
