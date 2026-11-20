@@ -13,7 +13,7 @@ compatible system libraries, including Qt5 and image codecs, remain required.
   `spilehx.internal.Build.configure()`.
 - That macro rejects unsupported targets, defines `HXCPP_M64` and adds the generated
   native linker XML to `NativeLibrary`. Display/no-output compilation skips setup.
-- `make` delegates to `package-haxelib.sh`.
+- Run `bash package-haxelib.sh` from the repository root to build and package the library.
 
 ## Code locations
 
