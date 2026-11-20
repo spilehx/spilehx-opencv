@@ -104,8 +104,9 @@ highgui and videoio, together with their installed transitive dependencies.
   and `waitKey` returns the key code or `-1` on timeout. Trackbar and mouse callbacks
   remain rooted until window destruction. `initSystem`, combined `convertImage`
   flags, OpenGL bindings and Qt-specific buttons/overlays/status bars were removed.
-- **Capture:** `captureFromFile` accepts an optional backend, `grabFrame` returns
-  Bool, and `retrieveFrame`/`readFrame` return independent Mats or null on failure.
+- **Capture:** `captureFromFile` and `captureFromCamera` accept an optional backend.
+  `grabFrame` returns Bool, and `retrieveFrame`/`readFrame` return independent Mats
+  or null on failure.
   `readFrame` replaces `queryFrame`. Properties have get/set methods;
   `releaseCapture` closes the input immediately, and GC also releases the handle.
   Vendor-specific legacy property constants were removed.
@@ -131,8 +132,12 @@ HighGUI.releaseCapture(capture);
 // frame remains valid after release and later capture operations.
 ```
 
-Capture property support depends on the backend. This wrapper exposes file inputs;
-backend compilation alone does not guarantee a usable device or video format.
+`HighGUI.captureFromCamera()` opens camera index 0; pass another index to select a
+different camera. `samples/src/VideoTestBench.hx` applies selected filters to webcam
+frames continuously; press Escape to exit.
+
+Capture property support depends on the backend. Backend compilation alone does
+not guarantee a usable device or video format.
 
 ## Build and package
 

@@ -115,6 +115,13 @@ CV_PRIM(highgui, captureFromFile, 2, (value filename, value backend),
     val_gc(handle, finaliser<cv::VideoCapture>);
     return handle;
 );
+CV_PRIM(highgui, captureFromCamera, 2, (value index, value backend),
+    std::unique_ptr<cv::VideoCapture> input(new cv::VideoCapture());
+    if (!input->open(val_get_int(index), val_get_int(backend))) return val_null;
+    value handle = alloc_abstract(k_Capture, input.release());
+    val_gc(handle, finaliser<cv::VideoCapture>);
+    return handle;
+);
 CV_PRIM(highgui, getCaptureProperty, 2, (value handle, value property),
     return alloc_float(capture(handle).get(val_get_int(property)));
 );

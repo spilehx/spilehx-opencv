@@ -1,4 +1,5 @@
 import spilehx.cv.features2d.KeyPoint;
+import spilehx.cv.features2d.GFFT;
 import spilehx.cv.Features2D;
 import spilehx.cv.ImgProc;
 import spilehx.cv.Core;
@@ -7,7 +8,7 @@ import spilehx.cv.HighGUI;
 
 class VideoTestBench {
 	static function main() {
-		trace("TestBench starting");
+		trace("VideoTestBench starting");
 		new TestBenchApplication().run();
 	}
 }
@@ -24,35 +25,50 @@ private class TestBenchApplication {
 	public function new() {}
 
 	public function run() {
-		trace("TestBenchApplication running");
-		sourceImage = getImageInput("test.jpg");
-		outputImage = sourceImage;
+		var capture = HighGUI.captureFromCamera();
+		if (capture == null)
+			throw "Could not open webcam 0";
 
-		showImageWindow(INPUT_WINDOW_TITLE, sourceImage);
+		try {
+			HighGUI.namedWindow(INPUT_WINDOW_TITLE, HighGUI.WINDOW_AUTOSIZE | HighGUI.WINDOW_GUI_NORMAL);
+			HighGUI.namedWindow(OUTPUT_WINDOW_TITLE, HighGUI.WINDOW_AUTOSIZE | HighGUI.WINDOW_GUI_NORMAL);
+			filters = getFilters();
+			showFilterWindow(filters);
 
-		filters = getFilters();
-		showFilterWindow(filters);
+			while (true) {
+				var frame:Mat = HighGUI.readFrame(capture);
+				if (frame == null) {
+					trace("Webcam frame read failed; exiting");
+					break;
+				}
 
-		showImageWindow(OUTPUT_WINDOW_TITLE, outputImage);
+				sourceImage = frame;
+				HighGUI.showImage(INPUT_WINDOW_TITLE, sourceImage);
+				updateWithFilters();
+				if (HighGUI.waitKey(1) == 27)
+					break;
+			}
+		} catch (error:Dynamic) {
+			HighGUI.releaseCapture(capture);
+			HighGUI.destroyAllWindows();
+			throw error;
+		}
 
-		HighGUI.waitKey(0);
-		trace("waitKey(0) returned; exiting");
+		HighGUI.releaseCapture(capture);
 		HighGUI.destroyAllWindows();
-		Sys.exit(0);
 	}
 
 	private function getFilters():Array<TestFilter> {
 		return [
 			new TestFilter("Grey scale", ImageFilters.greyscale),
 			new TestFilter("Gaussian Blur", ImageFilters.gaussianBlur),
-            new TestFilter("Threshold", ImageFilters.threshold),
+			new TestFilter("Threshold", ImageFilters.threshold),
 			new TestFilter("DetectCorners", ImageFilters.detectCorners)
 		];
 	}
 
 	private function applyFilter(filter:TestFilter, checked:Bool):Void {
 		filter.applied = checked;
-		updateWithFilters();
 	}
 
 	private function updateWithFilters():Void {
@@ -102,28 +118,6 @@ private class TestBenchApplication {
 			}
 		});
 	}
-
-	private function showImageWindow(title:String, image:Mat) {
-		HighGUI.namedWindow(title, HighGUI.WINDOW_AUTOSIZE | HighGUI.WINDOW_GUI_NORMAL);
-		HighGUI.showImage(title, image);
-	}
-
-	private function getImageInput(path:String):Mat {
-		var image:Mat = null;
-		try {
-			image = HighGUI.loadImage(path, HighGUI.IMREAD_COLOR_BGR);
-		} catch (error:Dynamic) {
-			trace("Image loading failed: " + Std.string(error));
-			Sys.exit(1);
-		}
-
-		if (image == null) {
-			trace("Image loading returned null; check the image path and file contents");
-			Sys.exit(1);
-		}
-
-		return image;
-	}
 }
 
 private class TestFilter {
@@ -139,7 +133,12 @@ private class TestFilter {
 }
 
 private class ImageFilters {
+	private static var cornerDetector:GFFT = Features2D.gfft(80, 0.02, 12);
+
 	public static function greyscale(source:Mat):Mat {
+		if (source.channels == 1)
+			return source;
+
 		var grey:Mat = Core.createMat(source.rows, source.cols, Core._8UC1);
 		ImgProc.cvtColor(source, grey, ImgProc.BGR2GRAY);
 		return grey;
@@ -152,15 +151,13 @@ private class ImageFilters {
 	}
 
 	public static function detectCorners(source:Mat):Mat {
-		var detector = Features2D.gfft(80, 0.02, 12);
 		var keypoints:Array<KeyPoint> = [];
-		detector.detect(source, null, keypoints);
+		cornerDetector.detect(greyscale(source), null, keypoints);
 		var corners:Mat = Core.cloneMat(source);
 		for (keypoint in keypoints) {
 			var point = keypoint.pt;
 			Core.circle(corners, Core.point(Math.round(point.x), Math.round(point.y)), 5, Core.rgb(255, 70, 70), 2);
 		}
-        trace("Detected " + keypoints.length + " corners");
 		return corners;
 	}
 	

@@ -23,7 +23,7 @@ compatible system libraries, including Qt5 and image codecs, remain required.
 | `ImgProc.hx` | `cpp/imgproc.*` | Filters, morphology, CLAHE, color conversion, integral/distance operations, accumulators and corners |
 | `Features2D.hx`, `features2d/` | `cpp/features2d.*` | GFTTDetector, SIFT, keypoints and descriptor Mats |
 | `Video.hx` | `cpp/video.*` | Sparse PyrLK and dense Farneback flow |
-| `HighGUI.hx`, `highgui/Capture.hx` | `cpp/highgui.*` | Image IO, ordinary windows, rooted callbacks and file capture |
+| `HighGUI.hx`, `highgui/Capture.hx` | `cpp/highgui.*` | Image IO, ordinary windows, rooted callbacks and camera/file capture |
 
 Haxe paths in the table are relative to `src/spilehx/cv/`.
 `src/spilehx/internal/` provides the native handles, loader, API macros and build

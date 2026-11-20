@@ -3,7 +3,7 @@ package spilehx.cv.highgui;
 import spilehx.internal.NativeBinding;
 
 /**
- * Native video capture handle opened by `HighGUI.captureFromFile`.
+ * Native video capture handle opened by `HighGUI.captureFromFile` or `HighGUI.captureFromCamera`.
  * Release explicitly with `HighGUI.releaseCapture`, or let GC close the input.
  * Returned frames own independent storage and do not retain this handle.
  */
