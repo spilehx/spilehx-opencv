@@ -14,6 +14,7 @@ class HighGUI implements CvProcs {
     public static inline var WINDOW_AUTOSIZE = 1;
     public static inline var WINDOW_FREERATIO = 0x100;
     public static inline var WINDOW_KEEPRATIO = 0;
+    public static inline var WINDOW_GUI_NORMAL = 0x10;
 
     public static inline var EVENT_MOUSEMOVE     = 0;
     public static inline var EVENT_LBUTTONDOWN   = 1;
