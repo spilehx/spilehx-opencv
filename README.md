@@ -63,9 +63,10 @@ licenses alongside your application.
 
 ## Supported API and breaking changes
 
-The modules are `Core`, `ImgProc`, `Features2D`, `Video` and `HighGUI` under
+The modules are `Core`, `ImgProc`, `Features2D`, `ObjDetect`, `Video` and `HighGUI` under
 `spilehx.cv`. Direct OpenCV modules are core, imgproc, imgcodecs, features, video,
 highgui and videoio, together with their installed transitive dependencies.
+`ObjDetect` additionally uses objdetect and dnn for YuNet face detection.
 
 - **Matrices:** `Mat` owns a `cv::Mat` header and reference-counted storage. `Arr`
   and the optional `Image` typedef both mean `Mat`. Use `rows`, `cols`, `type`,
@@ -99,6 +100,9 @@ highgui and videoio, together with their installed transitive dependencies.
   window/criteria and native `OPTFLOW_*` flags. Caller pyramid buffers and the
   count argument were removed. Farneback writes a resizable `_32FC2` flow Mat.
   BM, HS and legacy dense LK were removed.
+- **Face detection:** `ObjDetect.faceDetectorYN(modelPath)` loads a YuNet ONNX
+  model. `detect(bgrImage)` adjusts the network input size and returns independent
+  face rectangles clipped to the image. Loading and inference errors throw.
 - **IO/GUI:** `loadImage` returns a Mat or null; select `IMREAD_*` flags.
   `loadImageM` was removed. `saveImage` returns Bool, `namedWindow` returns Void
   and `waitKey` returns the key code or `-1` on timeout. Trackbar and mouse callbacks
@@ -184,6 +188,29 @@ cd bin
 It loads `test.jpg`, processes and saves six images, draws GFFT corners, displays
 six windows and offers a threshold trackbar. Press a key in an image window to
 exit. `haxe build.hxml` compiles the three smaller image examples.
+
+`VideoFaceTracker` detects multiple faces with YuNet and tracks their corner
+points with sparse PyrLK optical flow. It refreshes detection every ten frames,
+or sooner when a track loses reliable points, and draws rectangles and track IDs
+after the selected display filters. IDs can change after occlusion or when faces
+cross; they do not identify people. Face size is refreshed by detection, while
+optical flow updates position between detections.
+
+Repackage the native wrapper before compiling this sample, then from `samples/`:
+
+```sh
+haxe build-VideoFaceTracker.hxml
+./bin/VideoFaceTracker
+```
+
+The sample finds its model in `samples/models/` (or `../models/` beside the
+executable). An explicit ONNX path can be passed as the first argument. The bundled
+`face_detection_yunet_2026may.onnx` uses dynamic input dimensions for OpenCV 5 and
+comes from [OpenCV Zoo revision 48b10fa](https://github.com/opencv/opencv_zoo/tree/48b10fa505aeb51fbd127fc60a5c660040e823b7/models/face_detection_yunet).
+Its SHA-256 is `ebafce4e3c118d6554634be5c27ab333b4c047a9a8c3faf1d7cf93101c22f0f0`.
+Redistribute `samples/models/YuNet-LICENSE.txt` with the model. This sample and the
+new face detector binding have not yet been compiled or exercised; the validation
+record below predates their addition.
 
 Staged checks exercised matrix allocation/access, stride and view lifetime,
 destination mutation, processing/drawing, GFFT/SIFT descriptors and synthetic

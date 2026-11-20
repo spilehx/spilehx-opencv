@@ -3,3 +3,9 @@ build-sample1.hxml
 build-sample2.hxml
 --next
 build-sample3.hxml
+--next
+build-ImageTestBench.hxml
+--next
+build-VideoTestBench.hxml
+--next
+build-VideoFaceTracker.hxml

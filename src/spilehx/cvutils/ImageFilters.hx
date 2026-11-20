@@ -1,4 +1,4 @@
-package helpers;
+package spilehx.cvutils;
 
 import spilehx.cv.features2d.GFFT;
 import spilehx.cv.Features2D;

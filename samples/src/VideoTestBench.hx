@@ -1,6 +1,6 @@
 package ;
 
-import helpers.ImageFilters;
+import spilehx.cvutils.ImageFilters;
 import spilehx.cv.Core;
 import spilehx.cv.core.Mat;
 import spilehx.cv.HighGUI;

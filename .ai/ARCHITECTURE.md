@@ -22,6 +22,7 @@ compatible system libraries, including Qt5 and image codecs, remain required.
 | `Core.hx`, `core/` | `cpp/core.*` | Mat, geometry, scalars, criteria, arithmetic, indexing, views, transforms and drawing |
 | `ImgProc.hx` | `cpp/imgproc.*` | Filters, morphology, CLAHE, color conversion, integral/distance operations, accumulators and corners |
 | `Features2D.hx`, `features2d/` | `cpp/features2d.*` | GFTTDetector, SIFT, keypoints and descriptor Mats |
+| `ObjDetect.hx`, `objdetect/` | `cpp/objdetect.*` | YuNet face detection from an external ONNX model |
 | `Video.hx` | `cpp/video.*` | Sparse PyrLK and dense Farneback flow |
 | `HighGUI.hx`, `highgui/Capture.hx` | `cpp/highgui.*` | Image IO, ordinary windows, rooted callbacks and camera/file capture |
 

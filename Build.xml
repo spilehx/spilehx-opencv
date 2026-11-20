@@ -34,6 +34,7 @@
         <file name="cpp/core.cpp"/>
         <file name="cpp/imgproc.cpp"/>
         <file name="cpp/features2d.cpp"/>
+        <file name="cpp/objdetect.cpp"/>
         <file name="cpp/video.cpp"/>
         <file name="cpp/highgui.cpp"/>
     </files>

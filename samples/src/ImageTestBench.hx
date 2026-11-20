@@ -1,6 +1,6 @@
 package ;
 
-import helpers.ImageFilters;
+import spilehx.cvutils.ImageFilters;
 
 import spilehx.cv.features2d.KeyPoint;
 import spilehx.cv.Features2D;
