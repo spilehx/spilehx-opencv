@@ -16,7 +16,6 @@ set -euo pipefail
 # PATH_TO_OPEN_CV_SOURCE_BUILD_DIR="$PATH_TO_OPEN_CV_SOURCE_DIR/build"
 # PATH_TO_OPEN_CV_INSTALL_DIR="$PATH_TO_VENDOR_LIB_DIR/$OPEN_CV_LIB_NAME"
 
-# OPEN_CV_SOURCE_URL="https://github.com/opencv/opencv/archive/refs/tags/2.4.13.7.zip"
 
 
 
@@ -52,7 +51,7 @@ buildOpenCVWrapper(){
     validateDir $PATH_TO_VENDOR_NDLL_DIR
     haxelib run hxcpp Build.xml -DHXCPP_M64 \
         -I"$PATH_TO_VENDOR_DIR" \
-        -DOPENCV_INCLUDE_DIR="$PATH_TO_OPEN_CV_INSTALL_DIR/include" \
+        -DOPENCV_INCLUDE_DIR="$PATH_TO_OPEN_CV_INSTALL_DIR/include/opencv5" \
         -DOPENCV_LIB_DIR="$PATH_TO_OPEN_CV_INSTALL_DIR/lib" \
         -DPATH_TO_VENDOR_NDLL_DIR="$PATH_TO_VENDOR_NDLL_DIR" \
         -DPATH_TO_TEMP_DIR="$PATH_TO_TEMP_DIR"
@@ -90,19 +89,10 @@ startOpenCVBuild(){
         fi
 
 
-        # OpenCV 2.4 explicitly selects a macOS policy behavior removed in CMake 4.
-        # This targeted, repeatable update lets current CMake configure the source.
-        if cmake --version | head -n 1 | grep -Eq 'version ([4-9]|[1-9][0-9]+)\.'; then
-            sed -i 's/cmake_policy(SET CMP0042 OLD)/cmake_policy(SET CMP0042 NEW)/' \
-                "$PATH_TO_OPEN_CV_SOURCE_DIR/CMakeLists.txt"
-        fi
-
         validateDir $PATH_TO_OPEN_CV_INSTALL_DIR
 
         ECHO_INFO "Building OpenCV in $PATH_TO_OPEN_CV_SOURCE_BUILD_DIR"
-        # Keep the legacy OpenCV installation separate from system libraries.
-        # Qt provides the button, overlay and status bar functions used by the wrapper.
-        # Video codecs and GPU support are unnecessary for the image samples.
+        # Build the pinned static Linux installation when no installation exists.
         cmake -S "$PATH_TO_OPEN_CV_SOURCE_DIR" -B "$PATH_TO_OPEN_CV_SOURCE_BUILD_DIR" \
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DCMAKE_BUILD_TYPE=Release \
@@ -116,11 +106,6 @@ startOpenCVBuild(){
             -DBUILD_opencv_apps=OFF \
             -DBUILD_opencv_python=OFF \
             -DBUILD_opencv_java=OFF \
-            -DBUILD_opencv_gpu=OFF \
-            -DBUILD_opencv_ocl=OFF \
-            -DBUILD_opencv_nonfree=ON \
-            -DBUILD_opencv_contrib=ON \
-            -DBUILD_opencv_legacy=ON \
             -DWITH_CUDA=OFF \
             -DWITH_OPENCL=OFF \
             -DWITH_FFMPEG=OFF \
@@ -138,7 +123,7 @@ startOpenCVBuild(){
         echo ""
         ECHO_INFO "OpenCV build and installation completed."
 
-        echo "OpenCV headers installed to: $PATH_TO_OPEN_CV_INSTALL_DIR/include"
+        echo "OpenCV headers installed to: $PATH_TO_OPEN_CV_INSTALL_DIR/include/opencv5"
         echo "OpenCV libraries installed to: $PATH_TO_OPEN_CV_INSTALL_DIR/lib"
 
     fi

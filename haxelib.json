@@ -2,10 +2,10 @@
     "name":         "spilehx-opencv",
     "license":      "MIT",
     "tags":         ["cpp","opencv","linux"],
-    "description":  "Haxe bindings to OpenCV 2.4.13.7 for Linux x86_64 C++ applications",
+    "description":  "Modern OpenCV 5.1.0 bindings for Linux x86_64 C++ applications",
     "url":          "https://github.com/spilehx/spilehx-opencv",
     "version":      "0.0.4",
-    "releasenote":  "Statically linked OpenCV for Linux x86_64 C++ applications; no native runtime folder required.",
+    "releasenote":  "Breaking API update: Mat-only OpenCV 5.1.0, GFTT/SIFT, modern optical flow, basic GUI and owned file-capture frames.",
     "contributors": ["spilehx"],
     "classPath":    "src",
     "dependencies": {

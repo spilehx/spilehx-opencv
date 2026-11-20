@@ -1,4 +1,4 @@
-#include <imgproc/imgproc_c.h>
-#include "utils.h"
+#pragma once
 
-extern "C" { void imgproc_allocateKinds(); }
+#include <opencv2/imgproc.hpp>
+#include "core.h"

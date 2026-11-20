@@ -1,280 +1,144 @@
-#include <highgui/highgui_c.h>
-
 #include "highgui.h"
-#include "core.h"
-#include "utils.h"
-
-#include <vector>
 #include <map>
+#include <memory>
 #include <string>
+#include <vector>
 
-typedef std::vector<AutoGCRoot*> WindowRoots;
-typedef std::map<std::string, WindowRoots> WindowCleanup;
+using WindowRoots = std::vector<AutoGCRoot*>;
+static std::map<std::string, WindowRoots> windowRoots;
 
-WindowCleanup cleanup;
-void cleanup_window(const std::string& wname) {
-    WindowRoots& roots = cleanup[wname];
-    while (!roots.empty()) {
-        delete roots.back();
-        roots.pop_back();
+static void cleanupWindow(const std::string& name) {
+    auto window = windowRoots.find(name);
+    if (window == windowRoots.end()) return;
+    for (AutoGCRoot* root : window->second) delete root;
+    windowRoots.erase(window);
+}
+
+static void boundOnTrackbar(int position, void* userdata) {
+    AutoGCRoot* root = static_cast<AutoGCRoot*>(userdata);
+    val_call1(root->get(), alloc_int(position));
+}
+
+static void boundOnMouse(int event, int x, int y, int flags, void* userdata) {
+    AutoGCRoot* root = static_cast<AutoGCRoot*>(userdata);
+    value args[4] = {alloc_int(event), alloc_int(x), alloc_int(y), alloc_int(flags)};
+    val_callN(root->get(), args, 4);
+}
+
+CV_PRIM(highgui, loadImage, 2, (value filename, value flags),
+    cv::Mat image = cv::imread(val_get_string(filename), val_get_int(flags));
+    if (image.empty()) return val_null;
+    return hx_cv_core_toMat(new cv::Mat(image));
+);
+CV_PRIM(highgui, saveImage, 2, (value filename, value image),
+    return alloc_bool(cv::imwrite(val_get_string(filename), hx_cv_core_mat(image)));
+);
+CV_PRIM(highgui, waitKey, 1, (value delay),
+    return alloc_int(cv::waitKey(val_get_int(delay)));
+);
+CV_PRIM(highgui, namedWindow, 2, (value name, value flags),
+    cv::namedWindow(val_get_string(name), val_get_int(flags));
+    return val_null;
+);
+CV_PRIM(highgui, showImage, 2, (value name, value image),
+    cv::imshow(val_get_string(name), hx_cv_core_mat(image));
+    return val_null;
+);
+CV_PRIM(highgui, moveWindow, 3, (value name, value x, value y),
+    cv::moveWindow(val_get_string(name), val_get_int(x), val_get_int(y));
+    return val_null;
+);
+CV_PRIM(highgui, resizeWindow, 3, (value name, value width, value height),
+    cv::resizeWindow(val_get_string(name), val_get_int(width), val_get_int(height));
+    return val_null;
+);
+CV_PRIM(highgui, destroyWindow, 1, (value name),
+    std::string windowName = val_get_string(name);
+    cv::destroyWindow(windowName);
+    cleanupWindow(windowName);
+    return val_null;
+);
+CV_PRIM(highgui, destroyAllWindows, 0, (),
+    cv::destroyAllWindows();
+    while (!windowRoots.empty()) cleanupWindow(windowRoots.begin()->first);
+    return val_null;
+);
+
+CV_PRIM(highgui, createTrackbar, 5, (value name, value window, value initial, value count, value onChange),
+    std::string trackbarName = val_get_string(name);
+    std::string windowName = val_get_string(window);
+    std::unique_ptr<AutoGCRoot> root;
+    if (!val_is_null(onChange)) {
+        val_check_function(onChange, 1);
+        root.reset(new AutoGCRoot(onChange));
     }
-}
-void add_cleanup(value wname, AutoGCRoot* root) {
-    if (val_is_null(wname)) cleanup["!!control_panel!!"].push_back(root);
-    else cleanup[val_get<string>(wname)].push_back(root);
-}
-
-
-
-//
-// cvInitSystem
-// cvWaitKey
-//
-value hx_cv_highgui_initSystem(value argc, value argv) {
-    val_check(argv, array);
-    int size = val_array_size(argv);
-    char** _argv = new char*[size];
-    for (int i = 0; i < size; i++) _argv[i] = val_dup_string(val_array_i(argv, i));
-    int ret = cvInitSystem(val_get<int>(argc), _argv);
-    delete[] _argv;
-    return alloc<int>(ret);
-}
-value hx_cv_highgui_waitKey(value delay) {
-    cvWaitKey(val_get<int>(delay));
+    // OpenCV manages each position; no shared or borrowed integer storage.
+    int created = cv::createTrackbar(trackbarName, windowName, nullptr, val_get_int(count),
+        root ? boundOnTrackbar : nullptr, root.get());
+    if (created) {
+        if (root) windowRoots[windowName].push_back(root.release());
+        cv::setTrackbarPos(trackbarName, windowName, val_get_int(initial));
+    }
+    return alloc_bool(created != 0);
+);
+CV_PRIM(highgui, getTrackbarPos, 2, (value name, value window),
+    return alloc_int(cv::getTrackbarPos(val_get_string(name), val_get_string(window)));
+);
+CV_PRIM(highgui, setTrackbarPos, 3, (value name, value window, value position),
+    cv::setTrackbarPos(val_get_string(name), val_get_string(window), val_get_int(position));
     return val_null;
-}
-DEFINE_PRIM(hx_cv_highgui_initSystem, 2);
-DEFINE_PRIM(hx_cv_highgui_waitKey,    1);
-
-
-
-//
-// cvNamedWindow
-// cvDestroyWindow
-// cvDestroyAllWindows
-// cvMoveWindow
-// cvResizeWindow
-//
-value hx_cv_highgui_namedWindow(value winname, value flags) {
-    return alloc<int>(cvNamedWindow(val_get<string>(winname), val_get<int>(flags)));
-}
-value hx_cv_highgui_destroyWindow(value name) {
-    cvDestroyWindow(val_get<string>(name));
-    cleanup_window(val_get<string>(name));
-    return val_null;
-}
-value hx_cv_highgui_destroyAllWindows() {
-    cvDestroyAllWindows();
-    for (WindowCleanup::iterator i = cleanup.begin(); i != cleanup.end(); i++) {
-        cleanup_window(i->first);
+);
+CV_PRIM(highgui, setMouseCallback, 2, (value window, value onMouse),
+    std::string windowName = val_get_string(window);
+    if (val_is_null(onMouse)) {
+        cv::setMouseCallback(windowName, nullptr);
+    } else {
+        val_check_function(onMouse, 4);
+        std::unique_ptr<AutoGCRoot> root(new AutoGCRoot(onMouse));
+        cv::setMouseCallback(windowName, boundOnMouse, root.get());
+        windowRoots[windowName].push_back(root.release());
     }
     return val_null;
-}
-value hx_cv_highgui_moveWindow(value name, value x, value y) {
-    cvMoveWindow(val_get<string>(name), val_get<int>(x), val_get<int>(y));
-    return val_null;
-}
-value hx_cv_highgui_resizeWindow(value name, value width, value height) {
-    cvResizeWindow(val_get<string>(name), val_get<int>(width), val_get<int>(height));
-    return val_null;
-}
-DEFINE_PRIM(hx_cv_highgui_namedWindow,       2);
-DEFINE_PRIM(hx_cv_highgui_destroyWindow,     1);
-DEFINE_PRIM(hx_cv_highgui_destroyAllWindows, 0);
-DEFINE_PRIM(hx_cv_highgui_moveWindow,        3);
-DEFINE_PRIM(hx_cv_highgui_resizeWindow,      3);
+);
 
-
-
-//
-// cvCreateTrackbar
-// cvCreateButton
-// cvGetTrackbarPos
-// cvSetTrackbarPos
-//
-void bound_onChanged(int pos, void* onChange) {
-    if (onChange == NULL) return;
-    val_call1((value)onChange, alloc<int>(pos));
-}
-static int hx_cv_highgui_trackbar_value;
-value hx_cv_highgui_createTrackbar(value trackbarName, value windowName, value _value, value count, value onChange) {
-    if (!val_is_null(onChange)) val_check_function(onChange, 1);
-
-    int* val = &hx_cv_highgui_trackbar_value;
-    *val = val_get<int>(_value);
-
-    add_cleanup(windowName, new AutoGCRoot(onChange));
-
-    if (val_is_null(onChange)) {
-        return alloc<int>(cvCreateTrackbar(val_get<string>(trackbarName), safe_val_string(windowName), val, val_get<int>(count)));
-    }
-    else {
-        return alloc<int>(cvCreateTrackbar2(val_get<string>(trackbarName), safe_val_string(windowName), val, val_get<int>(count), bound_onChanged, onChange));
-    }
-}
-void bound_onButtonChanged(int state, void* onChange) {
-    if (onChange == NULL) return;
-    val_call1((value)onChange, alloc<int>(state));
-}
-value hx_cv_highgui_createButton(value buttonName, value onChange, value buttonType, value initialState) {
-    add_cleanup(val_null, new AutoGCRoot(onChange));
-    return alloc<int>(cvCreateButton(val_get<string>(buttonName), bound_onButtonChanged, onChange, val_get<int>(buttonType), val_get<int>(initialState)));
-}
-value hx_cv_highgui_getTrackbarPos(value trackbarName, value windowName) {
-    return alloc_int(cvGetTrackbarPos(val_get<string>(trackbarName), safe_val_string(windowName)));
-}
-value hx_cv_highgui_setTrackbarPos(value trackbarName, value windowName, value pos) {
-    cvSetTrackbarPos(val_get<string>(trackbarName), safe_val_string(windowName), val_get<int>(pos));
-    return val_null;
-}
-DEFINE_PRIM(hx_cv_highgui_createTrackbar, 5);
-DEFINE_PRIM(hx_cv_highgui_createButton,   4);
-DEFINE_PRIM(hx_cv_highgui_getTrackbarPos, 2);
-DEFINE_PRIM(hx_cv_highgui_setTrackbarPos, 3);
-
-
-
-//
-// cvSetMouseCallback
-// cvSetOpenGlContext
-// cvSetOpenGLDrawCallback
-// cvUpdateWindow
-//
-void bound_onMouse(int event, int x, int y, int flags, void* onMouse) {
-    if (onMouse == NULL) return;
-    value args[4] = {alloc<int>(event), alloc<int>(x), alloc<int>(y), alloc<int>(flags)};
-    val_callN((value)onMouse, args, 4);
-}
-value hx_cv_highgui_setMouseCallback(value windowName, value onMouse) {
-    val_check_function(onMouse, 4);
-    add_cleanup(windowName, new AutoGCRoot(onMouse));
-    cvSetMouseCallback(val_get<string>(windowName), bound_onMouse, onMouse);
-    return val_null;
-}
-void bound_onDraw(void* onDraw) {
-    if (onDraw == NULL) return;
-    val_call0((value)onDraw);
-}
-value hx_cv_highgui_setOpenGlDrawCallback(value window, value onDraw) {
-    val_check_function(onDraw, 0);
-    add_cleanup(window, new AutoGCRoot(onDraw));
-    cvSetOpenGlDrawCallback(val_get<string>(window), bound_onDraw, onDraw);
-    return val_null;
-}
-value hx_cv_highgui_setOpenGlContext(value window) {
-    cvSetOpenGlContext(val_get<string>(window));
-    return val_null;
-}
-value hx_cv_highgui_updateWindow(value window) {
-    cvUpdateWindow(val_get<string>(window));
-    return val_null;
-}
-DEFINE_PRIM(hx_cv_highgui_setMouseCallback,      2);
-DEFINE_PRIM(hx_cv_highgui_setOpenGlDrawCallback, 2);
-DEFINE_PRIM(hx_cv_highgui_setOpenGlContext,      1);
-DEFINE_PRIM(hx_cv_highgui_updateWindow,          1);
-
-
-
-//
-// cvDisplayOverlay
-// cvDisplayStatusBar
-//
-value hx_cv_highgui_displayOverlay(value name, value text, value delayms) {
-    cvDisplayOverlay(val_get<string>(name), val_get<string>(text), val_get<int>(delayms));
-    return val_null;
-}
-value hx_cv_highgui_displayStatusBar(value name, value text, value delayms) {
-    cvDisplayStatusBar(val_get<string>(name), val_get<string>(text), val_get<int>(delayms));
-    return val_null;
-}
-DEFINE_PRIM(hx_cv_highgui_displayOverlay,   3);
-DEFINE_PRIM(hx_cv_highgui_displayStatusBar, 3);
-
-
-
-//
-// cvConvertImage
-// cvShowImage
-//
-value hx_cv_highgui_convertImage(value src, value dst, value flags) {
-    cvConvertImage(val_data(src), val_data(dst), val_get<int>(flags));
-    return val_null;
-}
-value hx_cv_highgui_showImage(value windowName, value image) {
-    cvShowImage(val_get<string>(windowName), val_data(image));
-    return val_null;
-}
-DEFINE_PRIM(hx_cv_highgui_convertImage, 3);
-DEFINE_PRIM(hx_cv_highgui_showImage,    2);
-
-
-
-//
-// cvLoadImage
-// cvLoadImageM
-// cvSaveImage
-//
-value hx_cv_highgui_loadImage(value filename, value iscolor) {
-    return CONVERT(core, Image, cvLoadImage(val_get<string>(filename), val_get<int>(iscolor)));
-}
-value hx_cv_highgui_loadImageM(value filename, value iscolor) {
-    return CONVERT(core, Mat, cvLoadImageM(val_get<string>(filename), val_get<int>(iscolor)));
-}
-value hx_cv_highgui_saveImage(value filename, value image) {
-    return alloc<int>(cvSaveImage(val_get<string>(filename), val_data(image)));
-}
-DEFINE_PRIM(hx_cv_highgui_loadImage,  2);
-DEFINE_PRIM(hx_cv_highgui_loadImageM, 2);
-DEFINE_PRIM(hx_cv_highgui_saveImage,  2);
-
-
-
-//
-// Capture
-// cvCaptureFromFile
-// cvGetCaptureProperty
-// cvGrabFrame
-// cvRetrieveFrame
-// cvQueryFrame
-//
-DECLARE_KIND(k_Capture);
 DEFINE_KIND(k_Capture);
-static void finalise_Capture(value v) {
-    CvCapture* ptr = (CvCapture*)val_data(v);
-    cvReleaseCapture(&ptr);
-}
-value hx_cv_highgui_captureFromFile(value filename) {
-    CvCapture* ptr = cvCaptureFromFile(val_get<string>(filename));
-    if (ptr == NULL) return val_null;
-    else {
-        value v = alloc_abstract(k_Capture, ptr);
-        val_gc(v, finalise_Capture);
-        return v;
-    }
-}
-value hx_cv_highgui_getCaptureProperty(value capture, value property_id) {
-    val_check_kind(capture, k_Capture);
-    return alloc<double>(cvGetCaptureProperty((CvCapture*)val_data(capture), val_get<int>(property_id)));
-}
-value hx_cv_highgui_grabFrame(value capture) {
-    val_check_kind(capture, k_Capture);
-    return alloc<int>(cvGrabFrame((CvCapture*)val_data(capture)));
-}
-value hx_cv_highgui_retrieveFrame(value capture) {
-    val_check_kind(capture, k_Capture);
-    return CONVERT_NOGC(core, Image, cvRetrieveFrame((CvCapture*)val_data(capture)));
-}
-value hx_cv_highgui_queryFrame(value capture) {
-    val_check_kind(capture, k_Capture);
-    return CONVERT_NOGC(core, Image, cvQueryFrame((CvCapture*)val_data(capture)));
-}
-DEFINE_PRIM(hx_cv_highgui_captureFromFile,    1);
-DEFINE_PRIM(hx_cv_highgui_getCaptureProperty, 2);
-DEFINE_PRIM(hx_cv_highgui_grabFrame,          1);
-DEFINE_PRIM(hx_cv_highgui_retrieveFrame,      1);
-DEFINE_PRIM(hx_cv_highgui_queryFrame,         1);
 
+static cv::VideoCapture& capture(value handle) {
+    val_check_kind(handle, k_Capture);
+    return *static_cast<cv::VideoCapture*>(val_data(handle));
+}
+
+CV_PRIM(highgui, captureFromFile, 2, (value filename, value backend),
+    std::unique_ptr<cv::VideoCapture> input(new cv::VideoCapture());
+    if (!input->open(val_get_string(filename), val_get_int(backend))) return val_null;
+    value handle = alloc_abstract(k_Capture, input.release());
+    val_gc(handle, finaliser<cv::VideoCapture>);
+    return handle;
+);
+CV_PRIM(highgui, getCaptureProperty, 2, (value handle, value property),
+    return alloc_float(capture(handle).get(val_get_int(property)));
+);
+CV_PRIM(highgui, setCaptureProperty, 3, (value handle, value property, value number),
+    return alloc_bool(capture(handle).set(val_get_int(property), val_get_double(number)));
+);
+CV_PRIM(highgui, grabFrame, 1, (value handle),
+    return alloc_bool(capture(handle).grab());
+);
+CV_PRIM(highgui, retrieveFrame, 1, (value handle),
+    cv::Mat frame;
+    if (!capture(handle).retrieve(frame) || frame.empty()) return val_null;
+    // Detach decoded storage so later backend operations cannot overwrite this frame.
+    return hx_cv_core_toMat(new cv::Mat(frame.clone()));
+);
+CV_PRIM(highgui, readFrame, 1, (value handle),
+    cv::Mat frame;
+    if (!capture(handle).read(frame) || frame.empty()) return val_null;
+    return hx_cv_core_toMat(new cv::Mat(frame.clone()));
+);
+CV_PRIM(highgui, releaseCapture, 1, (value handle),
+    capture(handle).release();
+    return val_null;
+);
 
 extern "C" void highgui_allocateKinds() {
     k_Capture = alloc_kind();

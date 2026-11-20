@@ -7,13 +7,9 @@ import spilehx.internal.NativeBinding;
  * Create independent points with `Core.point2D32f`.
  */
 class Point2D32f extends NativeBinding {
-    // Borrowed coordinates must keep their native owner alive.
-    var owner:NativeBinding;
-
     @:allow(spilehx.cv)
-    function new(nativeObject:Dynamic, ?owner:NativeBinding) {
+    function new(nativeObject:Dynamic) {
         super(nativeObject);
-        this.owner = owner;
     }
     @:allow(spilehx.cv)
     static inline function cvt(x:Dynamic):Null<Point2D32f> {

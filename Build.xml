@@ -11,7 +11,7 @@
     </section>
 
     <!-- Headers can be supplied with -DOPENCV_INCLUDE_DIR=... -->
-    <set name="OPENCV_INCLUDE_DIR" value="/usr/local/include" unless="OPENCV_INCLUDE_DIR"/>
+    <set name="OPENCV_INCLUDE_DIR" value="/usr/local/include/opencv5" unless="OPENCV_INCLUDE_DIR"/>
 
     <!-- Determine the output location for the wrapper archive -->
 
@@ -28,15 +28,14 @@
         <compilerflag value="-Icpp"/>
         <compilerflag value="-DSTATIC_LINK"/>
         <compilerflag value="-I${OPENCV_INCLUDE_DIR}"/>
-        <compilerflag value="-I${OPENCV_INCLUDE_DIR}/opencv2"/>
+        <compilerflag value="-std=c++17"/>
 
         <file name="cpp/main.cpp"/>
-        <file name="cpp/highgui.cpp"/>
         <file name="cpp/core.cpp"/>
-        <file name="cpp/video.cpp"/>
         <file name="cpp/imgproc.cpp"/>
-        <file name="cpp/nonfree.cpp"/>
         <file name="cpp/features2d.cpp"/>
+        <file name="cpp/video.cpp"/>
+        <file name="cpp/highgui.cpp"/>
     </files>
 
     <!-- Generate the wrapper archive; OpenCV is linked by the consuming application. -->

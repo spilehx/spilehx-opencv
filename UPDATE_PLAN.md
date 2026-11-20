@@ -98,7 +98,7 @@ escape across CFFI. Apply this only to the retained bindings.
 
 ## Implementation sequence
 
-### 1. Establish the smallest compiling and linking package
+### 1. Establish the smallest compiling and linking package COMPLETED
 
 Files: `build_vendor.sh`, `Build.xml`, `package-haxelib.sh`, `cpp/main.cpp`,
 `cpp/core.h`, `cpp/core.cpp`, `cpp/utils.h`, `src/spilehx/cv/Core.hx`,
@@ -137,7 +137,7 @@ Files: `build_vendor.sh`, `Build.xml`, `package-haxelib.sh`, `cpp/main.cpp`,
   allocates and reads/writes a matrix. This is the first integration gate; resolve
   compiler, registration and static linker issues before implementing more features.
 
-### 2. Implement useful core operations and image processing
+### 2. Implement useful core operations and image processing COMPLETED
 
 Files: `cpp/core.*`, `cpp/imgproc.*`, corresponding `Core.hx`, `ImgProc.hx`,
 `src/spilehx/cv/core/*`, plus `cpp/main.cpp`/`Build.xml` registrations.
@@ -153,7 +153,7 @@ Files: `cpp/core.*`, `cpp/imgproc.*`, corresponding `Core.hx`, `ImgProc.hx`,
 - Correct migrated operand wiring (old and/div pass src1 twice). Use row-aware
   typed access for views; update outputs through stored Mat references.
 
-### 3. Implement features and modern flow
+### 3. Implement features and modern flow COMPLETED
 
 Files: `cpp/features2d.*`, `cpp/video.*`, `src/spilehx/cv/Features2D.hx`,
 `src/spilehx/cv/features2d/*`, `src/spilehx/cv/Video.hx`, registrations/build list.
@@ -167,7 +167,7 @@ Files: `cpp/features2d.*`, `cpp/video.*`, `src/spilehx/cv/Features2D.hx`,
   Keep the existing explicit sparse output-array conversion; use Mat for dense
   flow. Validate on synthetic matrices before adding GUI or callback handling.
 
-### 4. Implement IO and basic GUI
+### 4. Implement IO and basic GUI COMPLETED
 
 Files: `cpp/highgui.*`, `src/spilehx/cv/HighGUI.hx`, affected samples and registrations.
 
@@ -182,7 +182,7 @@ Files: `cpp/highgui.*`, `src/spilehx/cv/HighGUI.hx`, affected samples and regist
 - Update `samples/src/BetterSample.hx` and its existing HXML as needed. Exercise IO,
   processing, drawing, GFFT and windows together.
 
-### 5. Add supported capture and finish package/API cleanup
+### 5. Add supported capture and finish package/API cleanup COMPLETED
 
 Files: `cpp/highgui.cpp`, `src/spilehx/cv/HighGUI.hx`,
 `src/spilehx/cv/highgui/Capture.hx`, `Build.xml`, `cpp/main.cpp`, relevant samples,

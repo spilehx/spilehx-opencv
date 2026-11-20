@@ -1,7 +1,6 @@
-#include <features2d/features2d.hpp>
-#include "utils.h"
+#pragma once
 
-DECLARE_KIND(k_KeyPoint);
-CPPDECLARE_CONVERT(features2d, KeyPoint);
+#include <opencv2/features.hpp>
+#include "core.h"
 
-extern "C" { void features2d_allocateKinds(); }
+extern "C" void features2d_allocateKinds();
