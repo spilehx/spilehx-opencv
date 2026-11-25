@@ -6,7 +6,7 @@ Implementation takes precedence if this map becomes outdated. See [working pract
 
 `spilehx-opencv` binds OpenCV 5.1.0 through hxcpp CFFI for Linux x86_64 C++.
 The wrapper, OpenCV and installed bundled dependencies are static archives;
-compatible system libraries, including Qt5 and image codecs, remain required.
+compatible system libraries, including Qt5 and its runtime dependencies, remain required.
 
 - Consumers provide a main class and use `-lib spilehx-opencv`. `haxelib.json`
   declares the `src` class path and hxcpp dependency; `extraParams.hxml` invokes
@@ -73,14 +73,18 @@ retained.
 
 - `.env` pins source/install/temp paths and the OpenCV 5.1.0 URL. Existing source,
   build cache and installation can be reused through the build script's prompts.
-- JPEG is built from OpenCV's bundled sources with `WITH_JPEG=ON` and
-  `BUILD_JPEG=ON`. Reused installations must include the static
-  `liblibjpeg-turbo.a` archive; packaging includes it instead of linking `-ljpeg`.
+- JPEG, WebP, PNG, TIFF and zlib are built from OpenCV's bundled sources with their
+  `BUILD_*` options enabled. SPNG and zlib-ng are disabled to keep PNG/zlib archive
+  selection consistent. Reused installations must include `liblibjpeg-turbo.a`,
+  `liblibwebp.a`, `liblibpng.a`, `liblibtiff.a` and `libzlib.a`. Packaging links these
+  archives instead of system codec flags. Qt remains a shared system dependency.
 - Root `Build.xml` compiles all retained translation units with C++17 and the
   `include/opencv5` root. `vendor/toolchain/opencv-toolchain.xml` redirects wrapper
   intermediates into the temporary directory.
 - `package-haxelib.sh` builds the wrapper, recursively collects installed `.a`
   archives with duplicate-name rejection, and copies OpenCV/bundled licenses.
+  WebP's license is copied from its bundled source because its build does not
+  install it.
 - Generated linker XML keeps wrapper registration objects with whole-archive and
   groups the installed archives. The pinned Linux system dependencies are listed
   in the packaging script; pkg-config resolves Qt5 Widgets/Test/Concurrent only.

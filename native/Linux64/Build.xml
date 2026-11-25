@@ -12,7 +12,10 @@
     <lib name="${this_dir}/liblibharfbuzz.a" />
     <lib name="${this_dir}/liblibjpeg-turbo.a" />
     <lib name="${this_dir}/liblibopenjp2.a" />
+    <lib name="${this_dir}/liblibpng.a" />
     <lib name="${this_dir}/liblibprotobuf.a" />
+    <lib name="${this_dir}/liblibtiff.a" />
+    <lib name="${this_dir}/liblibwebp.a" />
     <lib name="${this_dir}/libopencv_calib.a" />
     <lib name="${this_dir}/libopencv_core.a" />
     <lib name="${this_dir}/libopencv_dnn.a" />
@@ -29,13 +32,8 @@
     <lib name="${this_dir}/libopencv_stitching.a" />
     <lib name="${this_dir}/libopencv_video.a" />
     <lib name="${this_dir}/libopencv_videoio.a" />
+    <lib name="${this_dir}/libzlib.a" />
     <lib name="-Wl,--end-group" />
-    <lib name="-lwebp" />
-    <lib name="-lwebpmux" />
-    <lib name="-lwebpdemux" />
-    <lib name="-lpng" />
-    <lib name="-ltiff" />
-    <lib name="-lz" />
     <lib name="-ldl" />
     <lib name="-lm" />
     <lib name="-lpthread" />

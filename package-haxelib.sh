@@ -76,12 +76,14 @@ for archive in install.rglob("*.a"):
     archives[archive.name] = archive
     shutil.copy2(archive, runtime / archive.name)
 
-if "liblibjpeg-turbo.a" not in archives:
-    raise SystemExit("Bundled static JPEG archive missing. Rebuild OpenCV with WITH_JPEG=ON and BUILD_JPEG=ON.")
+required_archives = {"liblibjpeg-turbo.a", "liblibwebp.a", "liblibpng.a", "liblibtiff.a", "libzlib.a"}
+missing_archives = required_archives - archives.keys()
+if missing_archives:
+    raise SystemExit("Bundled static archives missing: " + ", ".join(sorted(missing_archives))
+                     + ". Rerun packaging and choose to rebuild the existing OpenCV installation.")
 
 # System dependencies exported by the pinned Linux OpenCV 5.1.0 build.
-flags = ["-lwebp", "-lwebpmux", "-lwebpdemux", "-lpng", "-ltiff",
-         "-lz", "-ldl", "-lm", "-lpthread", "-lrt"]
+flags = ["-ldl", "-lm", "-lpthread", "-lrt"]
 flags.extend(shlex.split(subprocess.check_output(
     ["pkg-config", "--libs", "Qt5Widgets", "Qt5Test", "Qt5Concurrent"],
     text=True)))
@@ -114,6 +116,9 @@ for flag in flags:
 ET.indent(root)
 ET.ElementTree(root).write(runtime / "Build.xml", encoding="unicode")
 PYTHON
+    # OpenCV's bundled WebP build does not install its license.
+    mkdir -p "$runtime_dir/licenses/libwebp"
+    cp "$PATH_TO_OPEN_CV_SOURCE_DIR/3rdparty/libwebp/COPYING" "$runtime_dir/licenses/libwebp/"
 }
 
 updateDevelopmentRuntime(){

@@ -1,6 +1,8 @@
 package spilehx.cv;
 
+import haxe.io.Bytes;
 import spilehx.cv.core.Mat;
+import spilehx.internal.NativeBinding;
 import spilehx.internal.NativeLibrary as Lib;
 import spilehx.internal.Macros;
 
@@ -46,6 +48,10 @@ class HighGUI implements CvProcs {
     @:CvProc function loadImage(filename:String, flags:Int=IMREAD_COLOR_BGR):Null<Mat>;
     /** Encodes by filename extension. Unsupported encodings raise an OpenCV error. */
     @:CvProc function saveImage(filename:String, image:Mat):Bool;
+    /** Encodes owned JPEG bytes in memory. Quality is 0–100; failures throw an OpenCV error. */
+    @:CvProc function encodeJpeg(image:Mat, quality:Int=95):Bytes {
+        return Bytes.ofData(load("encodeJpeg", 2)(NativeBinding.native(image), quality));
+    }
     /** Returns the key code, or -1 on timeout. A delay of 0 waits indefinitely. */
     @:CvProc function waitKey(delay:Int=0):Int;
     @:CvProc function namedWindow(name:String, flags:Int=WINDOW_AUTOSIZE):Void;

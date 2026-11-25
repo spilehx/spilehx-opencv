@@ -101,6 +101,15 @@ startOpenCVBuild(){
             -DBUILD_SHARED_LIBS=OFF \
             -DWITH_JPEG=ON \
             -DBUILD_JPEG=ON \
+            -DWITH_WEBP=ON \
+            -DBUILD_WEBP=ON \
+            -DWITH_PNG=ON \
+            -DWITH_SPNG=OFF \
+            -DBUILD_PNG=ON \
+            -DWITH_TIFF=ON \
+            -DBUILD_TIFF=ON \
+            -DWITH_ZLIB_NG=OFF \
+            -DBUILD_ZLIB=ON \
             -DBUILD_TESTS=OFF \
             -DBUILD_PERF_TESTS=OFF \
             -DBUILD_EXAMPLES=OFF \
@@ -130,10 +139,13 @@ startOpenCVBuild(){
 
     fi
 
-    if [[ ! -f "$PATH_TO_OPEN_CV_INSTALL_DIR/lib/opencv5/3rdparty/liblibjpeg-turbo.a" ]]; then
-        ECHO_ERROR "Bundled static JPEG archive missing. Rerun packaging and choose to rebuild the existing OpenCV installation." >&2
-        exit 1
-    fi
+    local archive
+    for archive in liblibjpeg-turbo.a liblibwebp.a liblibpng.a liblibtiff.a libzlib.a; do
+        if [[ ! -f "$PATH_TO_OPEN_CV_INSTALL_DIR/lib/opencv5/3rdparty/$archive" ]]; then
+            ECHO_ERROR "Bundled static archive $archive missing. Rerun packaging and choose to rebuild the existing OpenCV installation." >&2
+            exit 1
+        fi
+    done
 
 }
 
