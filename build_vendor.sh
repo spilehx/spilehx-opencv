@@ -99,6 +99,8 @@ startOpenCVBuild(){
             -DCMAKE_INSTALL_PREFIX="$PATH_TO_OPEN_CV_INSTALL_DIR" \
             -DCMAKE_INSTALL_LIBDIR=lib \
             -DBUILD_SHARED_LIBS=OFF \
+            -DWITH_JPEG=ON \
+            -DBUILD_JPEG=ON \
             -DBUILD_TESTS=OFF \
             -DBUILD_PERF_TESTS=OFF \
             -DBUILD_EXAMPLES=OFF \
@@ -126,6 +128,11 @@ startOpenCVBuild(){
         echo "OpenCV headers installed to: $PATH_TO_OPEN_CV_INSTALL_DIR/include/opencv5"
         echo "OpenCV libraries installed to: $PATH_TO_OPEN_CV_INSTALL_DIR/lib"
 
+    fi
+
+    if [[ ! -f "$PATH_TO_OPEN_CV_INSTALL_DIR/lib/opencv5/3rdparty/liblibjpeg-turbo.a" ]]; then
+        ECHO_ERROR "Bundled static JPEG archive missing. Rerun packaging and choose to rebuild the existing OpenCV installation." >&2
+        exit 1
     fi
 
 }

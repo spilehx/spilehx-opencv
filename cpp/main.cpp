@@ -6,13 +6,13 @@
 #include "core.h"
 #include "features2d.h"
 #include "objdetect.h"
-#include "highgui.h"
+#include "videoio.h"
 
 extern "C" void hx_opencv_entry() {
     core_allocateKinds();
     features2d_allocateKinds();
     objdetect_allocateKinds();
-    highgui_allocateKinds();
+    videoio_allocateKinds();
 }
 DEFINE_ENTRY_POINT(hx_opencv_entry);
 

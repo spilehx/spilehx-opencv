@@ -5,7 +5,7 @@ import spilehx.cvutils.FaceTrackingHelper;
 import spilehx.cv.Core;
 import spilehx.cv.core.Mat;
 import spilehx.cv.HighGUI;
-import spilehx.cv.highgui.Capture;
+import spilehx.cv.VideoCapture;
 
 class VideoFaceTracker {
 	static function main() {
@@ -27,7 +27,7 @@ private class FaceTrackerApplication {
 
 	public function run():Void {
 		faceTracker = new FaceTrackingHelper();
-		var capture:Capture = openCamera();
+		var capture:VideoCapture = openCamera();
 
 		try {
 			initializeWindows();
@@ -40,8 +40,8 @@ private class FaceTrackerApplication {
 		closeCapture(capture);
 	}
 
-	private function openCamera():Capture {
-		var capture:Capture = HighGUI.captureFromCamera(CAMERA_ID);
+	private function openCamera():VideoCapture {
+		var capture:VideoCapture = VideoCapture.fromCamera(CAMERA_ID);
 		if (capture == null)
 			throw "Could not open webcam " + CAMERA_ID;
 		return capture;
@@ -54,9 +54,9 @@ private class FaceTrackerApplication {
 		showFilterWindow(filters);
 	}
 
-	private function captureFrames(capture:Capture):Void {
+	private function captureFrames(capture:VideoCapture):Void {
 		while (true) {
-			var frame:Mat = HighGUI.readFrame(capture);
+			var frame:Mat = capture.readFrame();
 			if (frame == null) {
 				trace("Webcam frame read failed; exiting");
 				break;
@@ -74,8 +74,8 @@ private class FaceTrackerApplication {
 		showOutput(applyFilters(frame));
 	}
 
-	private function closeCapture(capture:Capture):Void {
-		HighGUI.releaseCapture(capture);
+	private function closeCapture(capture:VideoCapture):Void {
+		capture.release();
 		HighGUI.destroyAllWindows();
 	}
 

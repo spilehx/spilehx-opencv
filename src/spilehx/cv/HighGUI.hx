@@ -1,11 +1,10 @@
 package spilehx.cv;
 
 import spilehx.cv.core.Mat;
-import spilehx.cv.highgui.Capture;
 import spilehx.internal.NativeLibrary as Lib;
 import spilehx.internal.Macros;
 
-/** Mat image IO, camera/file capture and ordinary windows. Use waitKey for GUI events. */
+/** Mat image IO and ordinary windows. Use waitKey for GUI events. */
 class HighGUI implements CvProcs {
     static inline function load(n:String, p:Int=0):Dynamic
         return Lib.load("opencv", "hx_cv_highgui_"+n, p > 5 ? -1 : p);
@@ -62,31 +61,4 @@ class HighGUI implements CvProcs {
     @:CvProc function setTrackbarPos(name:String, windowName:String, position:Int):Void;
     /** Receives event, x, y and flags. Pass null to remove the handler. */
     @:CvProc function setMouseCallback(windowName:String, ?onMouse:Null<Int->Int->Int->Int->Void>):Void;
-
-    public static inline var CAP_ANY = 0;
-    public static inline var CAP_IMAGES = 2000;
-    public static inline var CAP_PROP_POS_MSEC = 0;
-    public static inline var CAP_PROP_POS_FRAMES = 1;
-    public static inline var CAP_PROP_FRAME_WIDTH = 3;
-    public static inline var CAP_PROP_FRAME_HEIGHT = 4;
-    public static inline var CAP_PROP_FPS = 5;
-    public static inline var CAP_PROP_FOURCC = 6;
-    public static inline var CAP_PROP_FRAME_COUNT = 7;
-    public static inline var CAP_PROP_FORMAT = 8;
-    public static inline var CAP_PROP_BACKEND = 42;
-
-    /** Returns null when the selected installed backend cannot open the file or sequence. */
-    @:CvProc function captureFromFile(filename:String, backend:Int=CAP_ANY):Null<Capture>;
-    /** Opens a camera by device index, or returns null when it cannot be opened. */
-    @:CvProc function captureFromCamera(index:Int=0, backend:Int=CAP_ANY):Null<Capture>;
-    /** Property support and units follow the selected OpenCV backend. */
-    @:CvProc function getCaptureProperty(capture:Capture, property:Int):Float;
-    @:CvProc function setCaptureProperty(capture:Capture, property:Int, value:Float):Bool;
-    @:CvProc function grabFrame(capture:Capture):Bool;
-    /** Returns an independent frame from the last successful grab, or null on failure. */
-    @:CvProc function retrieveFrame(capture:Capture):Null<Mat>;
-    /** Grabs and retrieves an independent frame, or returns null on failure/end of input. */
-    @:CvProc function readFrame(capture:Capture):Null<Mat>;
-    /** Closes the input immediately; the handle remains safe to collect later. */
-    @:CvProc function releaseCapture(capture:Capture):Void;
 }

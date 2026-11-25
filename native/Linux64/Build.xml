@@ -10,6 +10,7 @@
     <lib name="${this_dir}/libittnotify.a" />
     <lib name="${this_dir}/liblibclapack.a" />
     <lib name="${this_dir}/liblibharfbuzz.a" />
+    <lib name="${this_dir}/liblibjpeg-turbo.a" />
     <lib name="${this_dir}/liblibopenjp2.a" />
     <lib name="${this_dir}/liblibprotobuf.a" />
     <lib name="${this_dir}/libopencv_calib.a" />
@@ -29,7 +30,6 @@
     <lib name="${this_dir}/libopencv_video.a" />
     <lib name="${this_dir}/libopencv_videoio.a" />
     <lib name="-Wl,--end-group" />
-    <lib name="-ljpeg" />
     <lib name="-lwebp" />
     <lib name="-lwebpmux" />
     <lib name="-lwebpdemux" />

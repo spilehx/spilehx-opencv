@@ -24,7 +24,8 @@ compatible system libraries, including Qt5 and image codecs, remain required.
 | `Features2D.hx`, `features2d/` | `cpp/features2d.*` | GFTTDetector, SIFT, keypoints and descriptor Mats |
 | `ObjDetect.hx`, `objdetect/` | `cpp/objdetect.*` | YuNet face detection from an external ONNX model |
 | `Video.hx` | `cpp/video.*` | Sparse PyrLK and dense Farneback flow |
-| `HighGUI.hx`, `highgui/Capture.hx` | `cpp/highgui.*` | Image IO, ordinary windows, rooted callbacks and camera/file capture |
+| `HighGUI.hx` | `cpp/highgui.*` | Image IO, ordinary windows and rooted callbacks |
+| `VideoCapture.hx` | `cpp/videoio.*` | Camera/file capture, frame reads and capture properties without GUI calls |
 
 Haxe paths in the table are relative to `src/spilehx/cv/`.
 `src/spilehx/internal/` provides the native handles, loader, API macros and build
@@ -59,7 +60,7 @@ holders. SIFT descriptors are Mat outputs, and keypoint arrays resize exactly.
 Capture handles own `cv::VideoCapture` directly. Grab/read/retrieve and property
 methods delegate to the configured backend. Returned frames have independently
 owned cloned storage, so they survive later reads, explicit release and capture GC.
-`releaseCapture` closes the input; the finalizer deletes the handle later.
+`VideoCapture.release()` closes the input; the finalizer deletes the handle later.
 
 HighGUI stores per-window callback roots. OpenCV userdata points to an
 `AutoGCRoot`; callbacks resolve the current Haxe value with `get()`. Roots are
@@ -72,6 +73,9 @@ retained.
 
 - `.env` pins source/install/temp paths and the OpenCV 5.1.0 URL. Existing source,
   build cache and installation can be reused through the build script's prompts.
+- JPEG is built from OpenCV's bundled sources with `WITH_JPEG=ON` and
+  `BUILD_JPEG=ON`. Reused installations must include the static
+  `liblibjpeg-turbo.a` archive; packaging includes it instead of linking `-ljpeg`.
 - Root `Build.xml` compiles all retained translation units with C++17 and the
   `include/opencv5` root. `vendor/toolchain/opencv-toolchain.xml` redirects wrapper
   intermediates into the temporary directory.

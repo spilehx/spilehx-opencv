@@ -4,6 +4,7 @@ import spilehx.cvutils.ImageFilters;
 import spilehx.cv.Core;
 import spilehx.cv.core.Mat;
 import spilehx.cv.HighGUI;
+import spilehx.cv.VideoCapture;
 
 class VideoTestBench {
 	static function main() {
@@ -24,7 +25,7 @@ private class TestBenchApplication {
 	public function new() {}
 
 	public function run() {
-		var capture = HighGUI.captureFromCamera();
+		var capture = VideoCapture.fromCamera();
 		if (capture == null)
 			throw "Could not open webcam 0";
 
@@ -35,7 +36,7 @@ private class TestBenchApplication {
 			showFilterWindow(filters);
 
 			while (true) {
-				var frame:Mat = HighGUI.readFrame(capture);
+				var frame:Mat = capture.readFrame();
 				if (frame == null) {
 					trace("Webcam frame read failed; exiting");
 					break;
@@ -48,12 +49,12 @@ private class TestBenchApplication {
 					break;
 			}
 		} catch (error:Dynamic) {
-			HighGUI.releaseCapture(capture);
+			capture.release();
 			HighGUI.destroyAllWindows();
 			throw error;
 		}
 
-		HighGUI.releaseCapture(capture);
+		capture.release();
 		HighGUI.destroyAllWindows();
 	}
 
