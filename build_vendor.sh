@@ -37,9 +37,22 @@ init(){
 
 validateOpenCVBuild(){
     ECHO_INFO "Validating OpenCV build..."
+    validateGStreamerBuild
     validateOpenCVSource
     startOpenCVBuild
     buildOpenCVWrapper
+}
+
+validateGStreamerBuild(){
+    if ! command -v python3 >/dev/null 2>&1; then
+        ECHO_ERROR "Python 3 is required to generate GStreamer compiler flags." >&2
+        exit 1
+    fi
+    if ! command -v pkg-config >/dev/null 2>&1 || ! pkg-config --atleast-version=1.20 \
+        gstreamer-app-1.0 gstreamer-video-1.0; then
+        ECHO_ERROR "GStreamer >= 1.20 development packages are required (core and base)." >&2
+        exit 1
+    fi
 }
 
 buildOpenCVWrapper(){
@@ -47,12 +60,29 @@ buildOpenCVWrapper(){
 
     createTempDir
 
+    python3 - "$PATH_TO_TEMP_DIR/gstreamer-build.xml" <<'PYTHON'
+from pathlib import Path
+import shlex
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+
+flags = shlex.split(subprocess.check_output(
+    ["pkg-config", "--cflags", "gstreamer-app-1.0", "gstreamer-video-1.0"], text=True))
+root = ET.Element("xml")
+files = ET.SubElement(root, "files", id="common")
+for flag in flags:
+    ET.SubElement(files, "compilerflag", value=flag)
+ET.ElementTree(root).write(Path(sys.argv[1]), encoding="unicode")
+PYTHON
+
     rm -rf $PATH_TO_VENDOR_NDLL_DIR
     validateDir $PATH_TO_VENDOR_NDLL_DIR
     haxelib run hxcpp Build.xml -DHXCPP_M64 \
         -I"$PATH_TO_VENDOR_DIR" \
         -DOPENCV_INCLUDE_DIR="$PATH_TO_OPEN_CV_INSTALL_DIR/include/opencv5" \
         -DOPENCV_LIB_DIR="$PATH_TO_OPEN_CV_INSTALL_DIR/lib" \
+        -DGSTREAMER_BUILD_XML="$PATH_TO_TEMP_DIR/gstreamer-build.xml" \
         -DPATH_TO_VENDOR_NDLL_DIR="$PATH_TO_VENDOR_NDLL_DIR" \
         -DPATH_TO_TEMP_DIR="$PATH_TO_TEMP_DIR"
 

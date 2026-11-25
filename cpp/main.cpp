@@ -7,12 +7,14 @@
 #include "features2d.h"
 #include "objdetect.h"
 #include "videoio.h"
+#include "videoencoder.h"
 
 extern "C" void hx_opencv_entry() {
     core_allocateKinds();
     features2d_allocateKinds();
     objdetect_allocateKinds();
     videoio_allocateKinds();
+    videoencoder_allocateKinds();
 }
 DEFINE_ENTRY_POINT(hx_opencv_entry);
 

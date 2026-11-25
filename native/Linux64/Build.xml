@@ -43,5 +43,11 @@
     <lib name="-lQt5Test" />
     <lib name="-lQt5Concurrent" />
     <lib name="-lQt5Core" />
+    <lib name="-lgstapp-1.0" />
+    <lib name="-lgstvideo-1.0" />
+    <lib name="-lgstbase-1.0" />
+    <lib name="-lgstreamer-1.0" />
+    <lib name="-lgobject-2.0" />
+    <lib name="-lglib-2.0" />
   </target>
 </xml>

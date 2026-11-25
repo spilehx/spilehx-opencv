@@ -85,7 +85,8 @@ if missing_archives:
 # System dependencies exported by the pinned Linux OpenCV 5.1.0 build.
 flags = ["-ldl", "-lm", "-lpthread", "-lrt"]
 flags.extend(shlex.split(subprocess.check_output(
-    ["pkg-config", "--libs", "Qt5Widgets", "Qt5Test", "Qt5Concurrent"],
+    ["pkg-config", "--libs", "Qt5Widgets", "Qt5Test", "Qt5Concurrent",
+     "gstreamer-app-1.0", "gstreamer-video-1.0"],
     text=True)))
 if any("NOTFOUND" in flag for flag in flags):
     raise SystemExit("Unresolved system dependency in linker flags")

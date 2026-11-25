@@ -43,6 +43,7 @@ Follow the surrounding code when minor historical inconsistencies exist. Local p
 - Follow the file's indentation; do not impose tabs on files that use spaces.
 - Follow neighboring binding classes for visibility, metadata, inline methods, and native conversions.
 - When using callbacks for asynchronous completion, make the completion parameter explicit and invoke it once the operation completes. Use arrow callbacks for short handlers where consistent with nearby code.
+- make code readable, always include all braces
 
 ## C++ (`.cpp`, `.h`)
 

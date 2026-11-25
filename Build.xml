@@ -1,7 +1,7 @@
 <xml>
 
     <!-- Build the static OpenCV CFFI wrapper -->
-    <!-- Install hxcpp and run with 'haxelib run hxcpp Build.xml' -->
+    <!-- Use package-haxelib.sh to supply OpenCV paths and GStreamer compiler flags. -->
 
     <include name="${HXCPP}/build-tool/BuildCommon.xml"/>
 
@@ -39,7 +39,11 @@
         <file name="cpp/video.cpp"/>
         <file name="cpp/videoio.cpp"/>
         <file name="cpp/highgui.cpp"/>
+        <file name="cpp/videoencoder.cpp"/>
     </files>
+
+    <!-- Generated from pkg-config by build_vendor.sh. -->
+    <include name="${GSTREAMER_BUILD_XML}" if="GSTREAMER_BUILD_XML"/>
 
     <!-- Generate the wrapper archive; OpenCV is linked by the consuming application. -->
 

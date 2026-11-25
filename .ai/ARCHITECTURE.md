@@ -6,7 +6,7 @@ Implementation takes precedence if this map becomes outdated. See [working pract
 
 `spilehx-opencv` binds OpenCV 5.1.0 through hxcpp CFFI for Linux x86_64 C++.
 The wrapper, OpenCV and installed bundled dependencies are static archives;
-compatible system libraries, including Qt5 and its runtime dependencies, remain required.
+compatible system libraries, including Qt5, GStreamer and their runtime dependencies, remain required.
 
 - Consumers provide a main class and use `-lib spilehx-opencv`. `haxelib.json`
   declares the `src` class path and hxcpp dependency; `extraParams.hxml` invokes
@@ -27,6 +27,7 @@ compatible system libraries, including Qt5 and its runtime dependencies, remain 
 | `HighGUI.hx` | `cpp/highgui.*` | Ordinary windows, GUI events and rooted callbacks |
 | `ImgCodecs.hx` | `cpp/imgcodecs.*` | Image file IO and in-memory JPEG encoding |
 | `VideoCapture.hx` | `cpp/videoio.*` | Camera/file capture, frame reads and capture properties without GUI calls |
+| `VideoEncoder.hx` | `cpp/videoencoder.*` | In-memory H.264 encoding with polled packets through GStreamer |
 
 Haxe paths in the table are relative to `src/spilehx/cv/`.
 `src/spilehx/internal/` provides the native handles, loader, API macros and build
@@ -63,6 +64,17 @@ methods delegate to the configured backend. Returned frames have independently
 owned cloned storage, so they survive later reads, explicit release and capture GC.
 `VideoCapture.release()` closes the input; the finalizer deletes the handle later.
 
+Each VideoEncoder owns a GStreamer appsrc/x264enc/h264parse/appsink pipeline.
+Native worker threads do not call Haxe. `pollPackets()` copies complete Annex B
+access units into independently owned byte arrays, wrapped as Haxe Bytes. Packet
+timestamps are converted through the sample segment to pipeline running time.
+Only raw input frames may be dropped; the bounded encoded output queue preserves
+frame order and applies backpressure to encoding. Explicit release stops the
+pipeline and discards pending output; finalization is a fallback. CamStream fans
+processed Mats out to attached encoders outside its locks and releases them on
+capture exit. One app consumer polls an encoder and owns distribution to viewers;
+there is no HTTP server, signaling or WebRTC transport in the haxelib.
+
 HighGUI stores per-window callback roots. OpenCV userdata points to an
 `AutoGCRoot`; callbacks resolve the current Haxe value with `get()`. Roots are
 released after window destruction. Trackbars use OpenCV-managed positions with a
@@ -88,14 +100,17 @@ retained.
   install it.
 - Generated linker XML keeps wrapper registration objects with whole-archive and
   groups the installed archives. The pinned Linux system dependencies are listed
-  in the packaging script; pkg-config resolves Qt5 Widgets/Test/Concurrent only.
+  in the packaging script; pkg-config resolves Qt5 Widgets/Test/Concurrent and
+  GStreamer app/video dependencies. GStreamer >= 1.20 development
+  packages supply wrapper compiler flags through a temporary XML include.
   OpenCV `.pc` files and development-tree archive paths are not required.
 - Packaging generates `native/Linux64/` and a ZIP in `dist/`. Never review or
   manually edit generated `native/` files. Consumer sources and archives must come
   from the same package. Build outputs live under vendor/build/obj/ndll/dist paths.
 
-The installed build includes Qt, V4L2/OBSENSOR and built-in image-sequence/MJPEG
-backends; FFmpeg, GStreamer and OpenGL are disabled. Hardware capture and general
+The OpenCV build includes Qt, V4L2/OBSENSOR and built-in image-sequence/MJPEG
+backends; its FFmpeg, GStreamer and OpenGL backends are disabled. VideoEncoder uses
+GStreamer directly, independently of OpenCV's videoio backend. Hardware capture and general
 video-format support remain backend-dependent and unverified.
 
 ## Validation and extension
