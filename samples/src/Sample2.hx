@@ -1,5 +1,6 @@
 import spilehx.cv.Core;
 import spilehx.cv.HighGUI;
+import spilehx.cv.ImgCodecs;
 import spilehx.cv.ImgProc;
 
 class Sample2 {
@@ -7,7 +8,7 @@ class Sample2 {
         haxe.Log.trace = function (m,?_) Sys.println(Std.string(m));
 
         var image = null;
-        try image = HighGUI.loadImage("test.jpg", HighGUI.IMREAD_COLOR_BGR)
+        try image = ImgCodecs.loadImage("test.jpg", ImgCodecs.IMREAD_COLOR_BGR)
         catch (_:Dynamic) {
             trace("Couldn't load image");
             Sys.exit(1);
@@ -21,7 +22,7 @@ class Sample2 {
 
         // Convert input image to greyscale and save to file.
         ImgProc.cvtColor(image, grey, ImgProc.BGR2GRAY);
-        if (!HighGUI.saveImage("Happy Fish (Grey).jpg", grey)) throw "Could not save grayscale image";
+        if (!ImgCodecs.saveImage("Happy Fish (Grey).jpg", grey)) throw "Could not save grayscale image";
 
         HighGUI.namedWindow("Colour", HighGUI.WINDOW_AUTOSIZE);
         HighGUI.namedWindow("Grey", HighGUI.WINDOW_AUTOSIZE);

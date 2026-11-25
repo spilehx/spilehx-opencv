@@ -24,7 +24,8 @@ compatible system libraries, including Qt5 and its runtime dependencies, remain 
 | `Features2D.hx`, `features2d/` | `cpp/features2d.*` | GFTTDetector, SIFT, keypoints and descriptor Mats |
 | `ObjDetect.hx`, `objdetect/` | `cpp/objdetect.*` | YuNet face detection from an external ONNX model |
 | `Video.hx` | `cpp/video.*` | Sparse PyrLK and dense Farneback flow |
-| `HighGUI.hx` | `cpp/highgui.*` | Image IO, ordinary windows and rooted callbacks |
+| `HighGUI.hx` | `cpp/highgui.*` | Ordinary windows, GUI events and rooted callbacks |
+| `ImgCodecs.hx` | `cpp/imgcodecs.*` | Image file IO and in-memory JPEG encoding |
 | `VideoCapture.hx` | `cpp/videoio.*` | Camera/file capture, frame reads and capture properties without GUI calls |
 
 Haxe paths in the table are relative to `src/spilehx/cv/`.

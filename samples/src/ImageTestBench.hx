@@ -8,6 +8,7 @@ import spilehx.cv.ImgProc;
 import spilehx.cv.Core;
 import spilehx.cv.core.Mat;
 import spilehx.cv.HighGUI;
+import spilehx.cv.ImgCodecs;
 
 class ImageTestBench {
 	static function main() {
@@ -115,7 +116,7 @@ private class TestBenchApplication {
 	private function getImageInput(path:String):Mat {
 		var image:Mat = null;
 		try {
-			image = HighGUI.loadImage(path, HighGUI.IMREAD_COLOR_BGR);
+			image = ImgCodecs.loadImage(path, ImgCodecs.IMREAD_COLOR_BGR);
 		} catch (error:Dynamic) {
 			trace("Image loading failed: " + Std.string(error));
 			Sys.exit(1);

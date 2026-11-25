@@ -1,4 +1,5 @@
 import spilehx.cv.HighGUI;
+import spilehx.cv.ImgCodecs;
 
 class Sample1 {
     static function main() {
@@ -12,7 +13,7 @@ class Sample1 {
 
         var image = null;
         trace("Loading test.jpg");
-        try image = HighGUI.loadImage("test.jpg", HighGUI.IMREAD_COLOR_BGR)
+        try image = ImgCodecs.loadImage("test.jpg", ImgCodecs.IMREAD_COLOR_BGR)
         catch (error:Dynamic) {
             trace("Image loading failed: " + Std.string(error));
             Sys.exit(1);

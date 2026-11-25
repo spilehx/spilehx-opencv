@@ -33,6 +33,7 @@
         <file name="cpp/main.cpp"/>
         <file name="cpp/core.cpp"/>
         <file name="cpp/imgproc.cpp"/>
+        <file name="cpp/imgcodecs.cpp"/>
         <file name="cpp/features2d.cpp"/>
         <file name="cpp/objdetect.cpp"/>
         <file name="cpp/video.cpp"/>

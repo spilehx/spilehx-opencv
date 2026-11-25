@@ -36,6 +36,15 @@ prompts, choose to rebuild the existing installation. Qt remains a system shared
 dependency, together with its own runtime dependencies. Those dependencies may
 still require system codec libraries; the resulting executable is not fully static.
 
+## Image codecs
+
+Image loading, saving, JPEG encoding and `IMREAD_*` constants now belong to
+`spilehx.cv.ImgCodecs` rather than `HighGUI`. These operations do not create
+windows or process GUI events. `MatHelper.matToJpg(mat, quality)` delegates to
+`ImgCodecs.encodeJpeg()` and returns independently owned `haxe.io.Bytes`.
+Rebuild and repackage the native wrapper before using the new image codec API.
+Qt remains a system dependency of the current package.
+
 ## Video capture
 
 Use `spilehx.cv.VideoCapture` for camera or file input without creating windows:

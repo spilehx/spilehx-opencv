@@ -3,6 +3,7 @@ package;
 import spilehx.cv.Core;
 import spilehx.cv.Features2D;
 import spilehx.cv.HighGUI;
+import spilehx.cv.ImgCodecs;
 import spilehx.cv.ImgProc;
 import spilehx.cv.core.Mat;
 import spilehx.cv.features2d.KeyPoint;
@@ -34,7 +35,7 @@ class BetterSample {
 	static function run():Void {
 		var imagePath:String = Path.join([Sys.getCwd(), "test.jpg"]);
 		trace("Loading image: " + imagePath);
-		var source:Mat = HighGUI.loadImage(imagePath, HighGUI.IMREAD_COLOR_BGR);
+		var source:Mat = ImgCodecs.loadImage(imagePath, ImgCodecs.IMREAD_COLOR_BGR);
 		if (source == null) throw "Could not decode image: " + imagePath;
 		trace("Source: " + source.cols + "x" + source.rows + "; element type=" + Core.getElemType(source));
 
@@ -83,7 +84,7 @@ class BetterSample {
 			var view = views[index];
 			var outputPath:String = Path.join([outputDirectory, view.filename]);
 			trace("Saving " + outputPath);
-			if (!HighGUI.saveImage(outputPath, view.image)) throw "Could not save " + outputPath;
+			if (!ImgCodecs.saveImage(outputPath, view.image)) throw "Could not save " + outputPath;
 
 			trace("Creating window: " + view.title);
 			HighGUI.namedWindow(view.title, HighGUI.WINDOW_NORMAL);

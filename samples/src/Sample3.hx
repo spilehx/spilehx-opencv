@@ -1,5 +1,6 @@
 import spilehx.cv.Core;
 import spilehx.cv.HighGUI;
+import spilehx.cv.ImgCodecs;
 import spilehx.cv.ImgProc;
 
 class Sample3 {
@@ -7,7 +8,7 @@ class Sample3 {
         haxe.Log.trace = function (m,?_) Sys.println(Std.string(m));
 
         var I = null;
-        try I = HighGUI.loadImage("test.jpg", HighGUI.IMREAD_COLOR_BGR)
+        try I = ImgCodecs.loadImage("test.jpg", ImgCodecs.IMREAD_COLOR_BGR)
         catch (_:Dynamic) {
             trace("Couldn't load image");
             Sys.exit(1);
