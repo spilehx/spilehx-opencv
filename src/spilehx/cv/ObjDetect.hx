@@ -28,14 +28,24 @@ class ObjDetect implements CvProcs {
      * @param image An 8-bit grayscale or BGR image.
      * @param corners Resized to contain four independent points per detected marker,
      * in OpenCV's clockwise order starting at the marker's top-left corner.
+     * @param rejected Optional output resized to contain four corners per rejected candidate.
+     * Rejected candidates have no decoded ID or canonical marker orientation.
      * @return Marker IDs matching the corner arrays, or an empty array when none are found.
      */
-    public static function detectMarkers(image:Mat, corners:Array<Array<Point2D32f>>):Array<Int> {
+    public static function detectMarkers(image:Mat, corners:Array<Array<Point2D32f>>,
+        ?rejected:Array<Array<Point2D32f>>):Array<Int> {
         var handles:Array<Array<Dynamic>> = [];
-        var ids:Array<Int> = load("detectMarkers", 2)(NativeBinding.native(image), handles);
+        var rejectedHandles:Array<Array<Dynamic>> = rejected == null ? null : [];
+        var ids:Array<Int> = load("detectMarkers", 3)(NativeBinding.native(image), handles, rejectedHandles);
         corners.resize(handles.length);
         for (i in 0...handles.length) {
             corners[i] = [for (handle in handles[i]) Point2D32f.cvt(handle)];
+        }
+        if (rejected != null) {
+            rejected.resize(rejectedHandles.length);
+            for (i in 0...rejectedHandles.length) {
+                rejected[i] = [for (handle in rejectedHandles[i]) Point2D32f.cvt(handle)];
+            }
         }
         return ids;
     }
