@@ -39,7 +39,6 @@ Follow the surrounding code when minor historical inconsistencies exist. Local p
 ### Declarations and layout
 
 - Put `package` first, followed by targeted imports. Keep macro-only imports inside the existing conditional compilation guards.
-- Keep opening braces on the declaration or control-flow line.
 - Follow the file's indentation; do not impose tabs on files that use spaces.
 - Follow neighboring binding classes for visibility, metadata, inline methods, and native conversions.
 - When using callbacks for asynchronous completion, make the completion parameter explicit and invoke it once the operation completes. Use arrow callbacks for short handlers where consistent with nearby code.

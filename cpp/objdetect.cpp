@@ -1,4 +1,5 @@
 #include "objdetect.h"
+#include <vector>
 
 DEFINE_KIND(k_FaceDetectorYN);
 
@@ -24,6 +25,28 @@ CV_PRIM(objdetect, FaceDetectorYN_detect, 2, (value handle, value image),
             cvCeil(faces.at<float>(i, 2)), cvCeil(faces.at<float>(i, 3)));
         box &= cv::Rect(0, 0, input.cols, input.rows);
         val_array_set_i(output, i, hx_cv_core_toRect(new cv::Rect(box)));
+    }
+    return output;
+);
+
+CV_PRIM(objdetect, detectMarkers, 2, (value image, value cornerOutput),
+    cv::Mat& input = hx_cv_core_mat(image);
+    val_check(cornerOutput, array);
+    cv::aruco::ArucoDetector detector(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_50));
+    std::vector<std::vector<cv::Point2f>> corners;
+    std::vector<int> ids;
+    detector.detectMarkers(input, corners, ids);
+
+    int count = static_cast<int>(ids.size());
+    value output = alloc_array(count);
+    val_array_set_size(cornerOutput, count);
+    for (int i = 0; i < count; ++i) {
+        val_array_set_i(output, i, alloc_int(ids[i]));
+        value points = alloc_array(4);
+        val_array_set_i(cornerOutput, i, points);
+        for (int j = 0; j < 4; ++j) {
+            val_array_set_i(points, j, hx_cv_core_toPoint2D32f(new cv::Point2f(corners[i][j])));
+        }
     }
     return output;
 );

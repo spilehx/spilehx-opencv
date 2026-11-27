@@ -2,9 +2,12 @@ package spilehx.cv;
 
 import spilehx.internal.NativeLibrary as Lib;
 import spilehx.internal.Macros;
+import spilehx.internal.NativeBinding;
+import spilehx.cv.core.Mat;
+import spilehx.cv.core.Point2D32f;
 import spilehx.cv.objdetect.FaceDetectorYN;
 
-/** DNN-based face detection using an external YuNet ONNX model. */
+/** ArUco marker detection and DNN-based face detection. */
 class ObjDetect implements CvProcs {
     @:allow(spilehx.cv.objdetect)
     static inline function load(n:String, p:Int=-1):Dynamic
@@ -18,4 +21,22 @@ class ObjDetect implements CvProcs {
      * @return A reusable face detector.
      */
     @:CvProc(FaceDetectorYN) function faceDetectorYN(model:String, scoreThreshold:Float=0.9):FaceDetectorYN;
+
+    /**
+     * Detects DICT_5X5_50 markers without modifying the input image.
+     *
+     * @param image An 8-bit grayscale or BGR image.
+     * @param corners Resized to contain four independent points per detected marker,
+     * in OpenCV's clockwise order starting at the marker's top-left corner.
+     * @return Marker IDs matching the corner arrays, or an empty array when none are found.
+     */
+    public static function detectMarkers(image:Mat, corners:Array<Array<Point2D32f>>):Array<Int> {
+        var handles:Array<Array<Dynamic>> = [];
+        var ids:Array<Int> = load("detectMarkers", 2)(NativeBinding.native(image), handles);
+        corners.resize(handles.length);
+        for (i in 0...handles.length) {
+            corners[i] = [for (handle in handles[i]) Point2D32f.cvt(handle)];
+        }
+        return ids;
+    }
 }

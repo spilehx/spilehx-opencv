@@ -8,6 +8,7 @@ import sys.thread.Mutex;
 
 class CamStream {
 	public var onFrame(null, default):Mat->Mat;
+
 	private var cameraId:Int;
 
 	public var baseImage(get, never):Mat;
@@ -59,7 +60,9 @@ class CamStream {
 				processFrame(frame);
 			}
 		} catch (error:Dynamic) {
-			if (capture != null) capture.release();
+			if (capture != null) {
+				capture.release();
+			}
 			closeEncoders();
 			throw error;
 		}
@@ -86,7 +89,7 @@ class CamStream {
 	 * Creates and attaches an H.264 encoder after the first processed output is available.
 	 * Poll encoded packets on one app thread and distribute them through your chosen transport.
 	 */
-	public function createVideoEncoder(fps:Int=30, bitrate:Int=2000):VideoEncoder {
+	public function createVideoEncoder(fps:Int = 30, bitrate:Int = 2000):VideoEncoder {
 		encoderMutex.acquire();
 		if (!captureRunning || stopRequested) {
 			encoderMutex.release();
@@ -97,7 +100,9 @@ class CamStream {
 		var frame:Mat = lastOutputImage;
 		outputImageMutex.release();
 		encoderMutex.release();
-		if (frame == null) throw "Wait for the first processed camera frame before creating a video encoder";
+		if (frame == null) {
+			throw "Wait for the first processed camera frame before creating a video encoder";
+		}
 		var encoder:VideoEncoder = new VideoEncoder(frame.cols, frame.rows, fps, bitrate);
 		encoderMutex.acquire();
 		if (!captureRunning || stopRequested || captureSessionId != sessionId) {
@@ -124,7 +129,9 @@ class CamStream {
 		encoders = [];
 		captureRunning = false;
 		encoderMutex.release();
-		for (encoder in closing) encoder.release();
+		for (encoder in closing) {
+			encoder.release();
+		}
 	}
 
 	private function processFrame(frame:Mat):Void {
@@ -137,7 +144,9 @@ class CamStream {
 		if (onFrame != null) {
 			frame = onFrame(frame);
 		}
-		if (frame == null) throw "Camera frame processing returned null";
+		if (frame == null) {
+			throw "Camera frame processing returned null";
+		}
 
 		outputImageMutex.acquire();
 		lastOutputImage = frame;
@@ -146,7 +155,9 @@ class CamStream {
 		encoderMutex.acquire();
 		var outputs:Array<VideoEncoder> = encoders.copy();
 		encoderMutex.release();
-		for (encoder in outputs) encoder.write(frame);
+		for (encoder in outputs) {
+			encoder.write(frame);
+		}
 	}
 
 	public function getLastOutputToImage():haxe.io.Bytes {
@@ -175,6 +186,12 @@ class CamStream {
 			outputImageMutex.release();
 			throw error;
 		}
+		outputImageMutex.release();
+	}
+
+	public function clearBase():Void {
+		outputImageMutex.acquire();
+		baseFrame = null;
 		outputImageMutex.release();
 	}
 }
