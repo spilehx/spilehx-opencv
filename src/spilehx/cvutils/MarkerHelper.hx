@@ -103,7 +103,7 @@ private class MarkerRegister {
 	private var matchedInstances:Map<String, Bool> = new Map<String, Bool>();
 	private var initialized:Bool = false;
 
-	private static final DISPOSE_TIMEOUT:Float = 1000; // threshold for disposing old markers in milliseconds
+	private static final DISPOSE_TIMEOUT:Float = 1500; // threshold for disposing old markers in milliseconds
 	private static final LOCATION_THRESHOLD:Int = 100; // maximum centre distance in image pixels
 
 	private static final SIGNIFICANT_ROTATION_CHANGE_THRESHOLD:Float = 2 * Math.PI / 180; // 2 degrees in radians
@@ -174,6 +174,10 @@ private class MarkerRegister {
 			}
 		}
 
+        if (currentMarker == null) {
+            trace("No registered marker found for marker with id: " + marker.id);
+        }
+
 		return currentMarker;
 	}
 
@@ -192,6 +196,7 @@ private class MarkerRegister {
 		for (key in registeredMarkers.keys()) {
 			var marker = registeredMarkers.get(key);
 			if (now - marker.lastSeen > DISPOSE_TIMEOUT) {
+                trace("Disposing marker due to timeout with instanceId: " + marker.instanceId);
 				unRegisterMarker(marker);
 			}
 		}
